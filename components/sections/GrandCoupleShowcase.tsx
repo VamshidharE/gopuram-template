@@ -56,8 +56,72 @@ export const GrandCoupleShowcase: React.FC = () => {
       ref={sectionRef}
       id="grand-couple-showcase"
       aria-label="Grand Couple Showcase"
-      className="relative w-full overflow-hidden pt-8 pb-0 sm:pt-12 sm:pb-0 md:pt-14 md:pb-0 text-[#42100b] select-none"
+      className="relative w-full overflow-hidden bg-[#faedd4] pt-20 pb-0 sm:pt-28 sm:pb-0 md:pt-36 md:pb-0 text-[#42100b] select-none"
     >
+      {/* Dedicated Dravidian Temple Mandapam Background - Full Quality Desktop & Mobile */}
+      <div aria-hidden="true" className="hidden md:block absolute inset-0 z-0 pointer-events-none select-none">
+        <Image
+          src="/decoration/temple-mandapam-bg-desktop.jpg"
+          alt="Ornate Dravidian Temple Mandapam Desktop Background"
+          fill
+          sizes="100vw"
+          className="object-cover object-top"
+          priority
+          unoptimized
+        />
+      </div>
+
+      <div aria-hidden="true" className="block md:hidden absolute inset-0 z-0 pointer-events-none select-none">
+        <Image
+          src="/decoration/temple-mandapam-bg-mobile.jpg"
+          alt="Ornate Dravidian Temple Mandapam Mobile Background"
+          fill
+          sizes="100vw"
+          className="object-cover object-top"
+          priority
+          unoptimized
+        />
+      </div>
+
+      {/* Half-Visible Rotating Golden Mandala anchored at bottom center behind couple */}
+      <div
+        aria-hidden="true"
+        className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-[360px] sm:w-[480px] md:w-[600px] aspect-square pointer-events-none z-[8] select-none"
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={
+            isInView
+              ? {
+                  opacity: 0.98,
+                  scale: 1,
+                  rotate: shouldReduceMotion ? 0 : 360,
+                }
+              : { opacity: 0, scale: 0.9 }
+          }
+          transition={{
+            opacity: { duration: 1.0, ease: "easeOut" },
+            scale: { duration: 1.0, ease: "easeOut" },
+            rotate: {
+              repeat: Infinity,
+              duration: 75,
+              ease: "linear",
+            },
+          }}
+          className="relative w-full h-full"
+        >
+          <Image
+            src="/decoration/couple-bottom-mandala.png"
+            alt="Sacred Rotating Mandala"
+            fill
+            sizes="(max-width: 640px) 360px, (max-width: 1024px) 480px, 600px"
+            className="object-contain drop-shadow-[0_0_28px_rgba(200,130,30,0.4)]"
+            priority
+            unoptimized
+          />
+        </motion.div>
+      </div>
+
       {/* Ambient Floating Flower Petals */}
       {!shouldReduceMotion && (
         <div aria-hidden="true" className="absolute inset-0 pointer-events-none overflow-hidden z-25">
@@ -154,39 +218,6 @@ export const GrandCoupleShowcase: React.FC = () => {
             }}
           />
 
-          {/* Sacred Rotating Lotus Mandala Halo (Subtle secondary backdrop) */}
-          <motion.div
-            aria-hidden="true"
-            initial={{ opacity: 0, scale: 0.85 }}
-            animate={
-              isInView
-                ? {
-                    opacity: 0.55,
-                    scale: 1,
-                    rotate: shouldReduceMotion ? 0 : 360,
-                  }
-                : { opacity: 0, scale: 0.85 }
-            }
-            transition={{
-              opacity: { duration: 1.2, ease: "easeOut" },
-              scale: { duration: 1.2, ease: "easeOut" },
-              rotate: {
-                repeat: Infinity,
-                duration: 90,
-                ease: "linear",
-              },
-            }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] sm:w-[460px] md:w-[560px] h-[300px] sm:h-[460px] md:h-[560px] pointer-events-none -z-10 select-none"
-          >
-            <Image
-              src="/decoration/Lotus-Mandala.png"
-              alt="Sacred Lotus Mandala"
-              fill
-              className="object-contain filter sepia-[0.3] brightness-105 opacity-80"
-              unoptimized
-            />
-          </motion.div>
-
           {/* Ground Soft Ambient Shadow */}
           <div
             aria-hidden="true"
@@ -219,32 +250,6 @@ export const GrandCoupleShowcase: React.FC = () => {
           </motion.div>
         </div>
 
-      </div>
-
-      {/* ============================================================ */}
-      {/* 3. FOREGROUND CLOUD BED COVERING ONLY THE RED REGION        */}
-      {/* Sits right at the base, covering the couple's feet & filling */}
-      {/* the entire gap down to Wedding Celebrations with zero gap.   */}
-      {/* ============================================================ */}
-      <div
-        aria-hidden="true"
-        className="absolute bottom-0 left-0 right-0 w-full z-20 pointer-events-none select-none overflow-hidden h-[55px] sm:h-[75px] md:h-[95px]"
-      >
-        <motion.div
-          animate={shouldReduceMotion ? {} : { x: ["-1.5%", "1.5%", "-1.5%"] }}
-          transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
-          className="relative w-[110%] -left-[5%] h-full"
-        >
-          <Image
-            src="/decoration/couple-clouds-bed.png"
-            alt="Foreground Clouds Bed"
-            fill
-            sizes="110vw"
-            className="object-cover object-top drop-shadow-[0_-4px_12px_rgba(215,185,145,0.25)]"
-            priority
-            unoptimized
-          />
-        </motion.div>
       </div>
 
     </section>

@@ -15,7 +15,7 @@ export const OpeningHeader: React.FC<OpeningHeaderProps> = ({ opacity, y }) => {
   return (
     <motion.div
       style={{ opacity, y }}
-      className="absolute top-0 left-0 right-0 z-30 pt-5 sm:pt-8 md:pt-11 px-4 flex flex-col items-center text-center pointer-events-none select-none max-w-4xl mx-auto"
+      className="absolute top-0 left-0 right-0 z-30 pt-4 sm:pt-6 md:pt-7 px-4 flex flex-col items-center text-center pointer-events-none select-none max-w-4xl mx-auto"
     >
       {/* Auspicious Invocation */}
       <motion.div
@@ -49,9 +49,9 @@ export const OpeningHeader: React.FC<OpeningHeaderProps> = ({ opacity, y }) => {
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 1.3, delay: 0.3 }}
-        className="mt-1.5 sm:mt-3 flex flex-row items-center justify-center gap-2 sm:gap-4 md:gap-5"
+        className="mt-1 sm:mt-2 flex flex-row items-center justify-center gap-2 sm:gap-4 md:gap-5"
       >
-        <h1 className="font-cinzel text-2xl sm:text-4xl md:text-5xl font-bold tracking-wider gold-gradient-text gold-subtle-glow drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)]">
+        <h1 className="font-cinzel text-2xl sm:text-4xl md:text-[2.75rem] md:leading-tight font-bold tracking-wider gold-gradient-text gold-subtle-glow drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)]">
           {details.groomName}
         </h1>
 
@@ -59,7 +59,7 @@ export const OpeningHeader: React.FC<OpeningHeaderProps> = ({ opacity, y }) => {
           &
         </span>
 
-        <h1 className="font-cinzel text-2xl sm:text-4xl md:text-5xl font-bold tracking-wider gold-gradient-text gold-subtle-glow drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)]">
+        <h1 className="font-cinzel text-2xl sm:text-4xl md:text-[2.75rem] md:leading-tight font-bold tracking-wider gold-gradient-text gold-subtle-glow drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)]">
           {details.brideName}
         </h1>
       </motion.div>
@@ -69,7 +69,7 @@ export const OpeningHeader: React.FC<OpeningHeaderProps> = ({ opacity, y }) => {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1.2, delay: 0.45 }}
-        className="mt-1.5 sm:mt-2.5 flex flex-col items-center gap-0.5"
+        className="mt-1 sm:mt-1.5 flex flex-col items-center gap-0.5"
       >
         <p className="font-cinzel text-[10px] sm:text-xs md:text-sm text-[#fdfaf2] tracking-[0.2em] uppercase font-semibold drop-shadow-[0_2px_12px_rgba(0,0,0,0.95)]">
           {details.weddingDate}

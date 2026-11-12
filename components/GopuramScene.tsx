@@ -19,6 +19,10 @@ import { AmbientAudio } from "./AmbientAudio";
 export const GopuramScene: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [viewport, setViewport] = useState<{ width: number; height: number }>({
+    width: 1440,
+    height: 900,
+  });
   const [isMounted, setIsMounted] = useState<boolean>(false);
   const shouldReduceMotion = useReducedMotion();
 
@@ -42,11 +46,14 @@ export const GopuramScene: React.FC = () => {
   // Screen size detection & URL progress parameter handling
   useEffect(() => {
     setIsMounted(true);
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+    const updateViewport = () => {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      setIsMobile(w < 768);
+      setViewport({ width: w, height: h });
     };
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
+    updateViewport();
+    window.addEventListener("resize", updateViewport);
 
     // Support ?progress=0.30 for direct verification and headless testing
     const params = new URLSearchParams(window.location.search);
@@ -59,14 +66,32 @@ export const GopuramScene: React.FC = () => {
       }
     }
 
-    return () => window.removeEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", updateViewport);
   }, [progressMotionValue]);
 
-  // Animation values from config
+  // Animation values from config + viewport-aware travel so bottom never disconnects
   const { animation, layout, assets } = invitationConfig;
-  const travelDistance = isMobile
-    ? animation.gopuramTravelMobilePx
-    : animation.gopuramTravelDesktopPx;
+  const gopuramWidthPct = isMobile
+    ? (layout.mobile.gopuramWidthPercent ?? 92)
+    : (layout.desktop.gopuramWidthPercent ?? 38);
+  const gopuramMaxW = isMobile
+    ? (layout.mobile.gopuramMaxWidthPx ?? 380)
+    : (layout.desktop.gopuramMaxWidthPx ?? 480);
+
+  const gopuramWidthPx = Math.min((viewport.width * gopuramWidthPct) / 100, gopuramMaxW);
+  const gopuramHeightPx = gopuramWidthPx * 3; // aspect-[1/3]
+  const gopuramInitialTopPx = isMobile
+    ? viewport.height * ((layout.mobile.gopuramInitialTopVh ?? 26) / 100)
+    : Math.max(215, viewport.height * 0.27);
+
+  // Travel far enough so the gopuram stone steps and doorway are solidly grounded into the bottom cloud bed
+  const targetBottomOffset = isMobile ? 36 : 60;
+  const targetBottomPx = viewport.height + targetBottomOffset;
+  const travelDistance = isMounted
+    ? Math.max(0, gopuramInitialTopPx + gopuramHeightPx - targetBottomPx)
+    : isMobile
+      ? animation.gopuramTravelMobilePx
+      : animation.gopuramTravelDesktopPx;
 
   const actualTravel = shouldReduceMotion ? travelDistance * 0.2 : travelDistance;
   const skyTravel = actualTravel * animation.skyParallaxIntensity;
@@ -78,12 +103,12 @@ export const GopuramScene: React.FC = () => {
     [0, -skyTravel, -skyTravel]
   );
 
-  // Layer 2: Gopuram Travel (moves upward with couple reveal, then STOPS when fully revealed)
-  const gopuramY = useTransform(
-    progressMotionValue,
-    [0, animation.coupleRevealComplete, 1],
-    [0, -actualTravel, -actualTravel]
-  );
+  // Layer 2: Gopuram Travel (dynamic function ensures live viewport heights are always accurately applied)
+  const gopuramY = useTransform(progressMotionValue, (p) => {
+    const travel = shouldReduceMotion ? actualTravel * 0.2 : actualTravel;
+    const progressClamped = Math.min(Math.max(p, 0), 1);
+    return -progressClamped * travel;
+  });
 
   // Layer 5: Opening Header fade & drift
   const headerOpacity = useTransform(
@@ -103,18 +128,6 @@ export const GopuramScene: React.FC = () => {
     progressMotionValue,
     [0, animation.headerFadeStart * 2],
     [1, 0]
-  );
-
-  // Cloud horizon fade-in as couple emerges (fully present from 65% onwards)
-  const cloudOpacity = useTransform(
-    progressMotionValue,
-    [animation.coupleRevealStart + 0.15, animation.coupleRevealComplete],
-    [0, 1]
-  );
-  const cloudY = useTransform(
-    progressMotionValue,
-    [animation.coupleRevealStart + 0.15, animation.coupleRevealComplete, 1],
-    [15, 0, 0]
   );
 
   // Programmatic scroll helper for verification & navigation
@@ -189,15 +202,17 @@ export const GopuramScene: React.FC = () => {
         */}
         <motion.div
           style={{
-            top: isMobile
-              ? `${layout.mobile.gopuramInitialTopVh}vh`
-              : `${layout.desktop.gopuramInitialTopVh}vh`,
+            top: isMounted
+              ? `${gopuramInitialTopPx}px`
+              : isMobile
+                ? `${layout.mobile.gopuramInitialTopVh}vh`
+                : "max(215px, 27vh)",
             y: gopuramY,
           }}
           className="absolute inset-x-0 z-20 flex justify-center pointer-events-none"
         >
           <div
-            className="relative aspect-[1/3] transition-all duration-300 drop-shadow-[0_20px_50px_rgba(0,0,0,0.55)]"
+            className="relative aspect-[1/3] drop-shadow-[0_20px_50px_rgba(0,0,0,0.55)]"
             style={{
               width: isMobile
                 ? `${layout.mobile.gopuramWidthPercent}vw`
@@ -239,40 +254,22 @@ export const GopuramScene: React.FC = () => {
 
         {/* Scroll down prompt */}
         <ScrollIndicator opacity={scrollIndicatorOpacity} />
+      </div>
 
-        {/* ========================================================= */}
-        {/* LAYER 6: SOFT GOLDEN SUNSET CLOUD HORIZON AT BASE         */}
-        {/* ========================================================= */}
-        <motion.div
-          style={{
-            opacity: cloudOpacity,
-            y: cloudY,
-            maskImage:
-              "linear-gradient(to bottom, transparent 0%, black 30%, black 100%)",
-            WebkitMaskImage:
-              "linear-gradient(to bottom, transparent 0%, black 30%, black 100%)",
-          }}
-          className="absolute bottom-0 inset-x-0 h-[80px] sm:h-[95px] md:h-[115px] z-28 pointer-events-none select-none overflow-hidden"
-          aria-hidden="true"
-        >
-          <Image
-            src="/events/section-cloud-transition.png"
-            alt="Soft sunset cloud horizon"
-            fill
-            sizes="100vw"
-            className="object-cover object-bottom filter brightness-[1.03] contrast-[1.02]"
-            unoptimized
-            priority
-          />
-          {/* Subtle warm golden ambient glow blending upward into sky */}
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background:
-                "linear-gradient(to top, rgba(234,140,40,0.18) 0%, rgba(245,180,60,0.06) 50%, transparent 100%)",
-            }}
-          />
-        </motion.div>
+      {/* Cloud layer attached to the bottom of the Gopuram section (NOT attached to the screen) */}
+      <div
+        aria-hidden="true"
+        className="absolute bottom-0 inset-x-0 w-full z-30 pointer-events-none select-none overflow-hidden h-[90px] sm:h-[120px] md:h-[150px]"
+      >
+        <Image
+          src="/decoration/couple-clouds-bed.png"
+          alt="Section Bottom Cloud Transition"
+          fill
+          sizes="100vw"
+          className="object-cover object-top"
+          unoptimized
+          priority
+        />
       </div>
     </div>
   );
