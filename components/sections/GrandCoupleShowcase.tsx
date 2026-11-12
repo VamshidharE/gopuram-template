@@ -56,25 +56,13 @@ export const GrandCoupleShowcase: React.FC = () => {
       ref={sectionRef}
       id="grand-couple-showcase"
       aria-label="Grand Couple Showcase"
-      className="relative w-full overflow-hidden bg-[#faedd4] pt-20 pb-0 sm:pt-28 sm:pb-0 md:pt-36 md:pb-0 text-[#42100b] select-none"
+      className="relative w-full overflow-hidden bg-[#faeed8] pt-14 pb-0 sm:pt-20 sm:pb-0 md:pt-24 md:pb-0 text-[#42100b] select-none"
     >
-      {/* Dedicated Dravidian Temple Mandapam Background - Full Quality Desktop & Mobile */}
-      <div aria-hidden="true" className="hidden md:block absolute inset-0 z-0 pointer-events-none select-none">
+      {/* User-Requested Auspicious Indian Temple Arch Background */}
+      <div aria-hidden="true" className="absolute inset-0 z-0 pointer-events-none select-none">
         <Image
-          src="/decoration/temple-mandapam-bg-desktop.jpg"
-          alt="Ornate Dravidian Temple Mandapam Desktop Background"
-          fill
-          sizes="100vw"
-          className="object-cover object-top"
-          priority
-          unoptimized
-        />
-      </div>
-
-      <div aria-hidden="true" className="block md:hidden absolute inset-0 z-0 pointer-events-none select-none">
-        <Image
-          src="/decoration/temple-mandapam-bg-mobile.jpg"
-          alt="Ornate Dravidian Temple Mandapam Mobile Background"
+          src="/decoration/couple-showcase-bg.jpg"
+          alt="Auspicious Indian Temple Arch Background"
           fill
           sizes="100vw"
           className="object-cover object-top"

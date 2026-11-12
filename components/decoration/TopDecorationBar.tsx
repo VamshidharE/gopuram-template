@@ -18,7 +18,7 @@ export const TopDecorationBar: React.FC = () => {
   return (
     <aside
       aria-hidden="true"
-      className="fixed top-0 inset-x-0 flex justify-between pointer-events-none select-none z-40"
+      className="absolute top-0 inset-x-0 flex justify-between pointer-events-none select-none z-35"
     >
       {/* Top-Left Hanging Toranam & Diya */}
       <div className="relative w-[85px] sm:w-[110px] md:w-[145px] lg:w-[170px] xl:w-[190px] aspect-[607/873] shrink-0">

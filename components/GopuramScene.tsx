@@ -15,6 +15,7 @@ import { CoupleCutout } from "./CoupleCutout";
 import { ScrollIndicator } from "./ScrollIndicator";
 import { ProgressHud } from "./ProgressHud";
 import { AmbientAudio } from "./AmbientAudio";
+import { TopDecorationBar } from "./decoration/TopDecorationBar";
 
 export const GopuramScene: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -149,6 +150,9 @@ export const GopuramScene: React.FC = () => {
       style={{ height: `${animation.scrollTrackHeightVh}vh` }}
       className="relative w-full bg-[#0a0807]"
     >
+      {/* Sacred hanging corner decoration attached completely to the top of this section */}
+      <TopDecorationBar />
+
       {/* Sacred ambient sound toggle */}
       <AmbientAudio />
 
@@ -256,17 +260,17 @@ export const GopuramScene: React.FC = () => {
         <ScrollIndicator opacity={scrollIndicatorOpacity} />
       </div>
 
-      {/* Cloud layer attached to the bottom of the Gopuram section (NOT attached to the screen) */}
+      {/* Cloud layer with organic undulating contour attached to the bottom of the section */}
       <div
         aria-hidden="true"
-        className="absolute bottom-0 inset-x-0 w-full z-30 pointer-events-none select-none overflow-hidden h-[90px] sm:h-[120px] md:h-[150px]"
+        className="absolute bottom-0 inset-x-0 w-full z-30 pointer-events-none select-none h-[130px] sm:h-[180px] md:h-[240px]"
       >
         <Image
-          src="/decoration/couple-clouds-bed.png"
-          alt="Section Bottom Cloud Transition"
+          src="/decoration/undulating-clouds-horizon.png"
+          alt="Section Bottom Undulating Cloud Horizon"
           fill
           sizes="100vw"
-          className="object-cover object-top"
+          className="object-fill"
           unoptimized
           priority
         />
