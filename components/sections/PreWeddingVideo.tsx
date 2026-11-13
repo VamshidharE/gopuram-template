@@ -6,6 +6,36 @@ import { motion, useInView, useReducedMotion } from "framer-motion";
 import { Play, Pause, Volume2, VolumeX, Maximize2 } from "lucide-react";
 import { weddingConfig } from "@/config/weddingConfig";
 
+/**
+ * Hanging Brass Temple Bell Component
+ * Gently sways with traditional temple acoustics visual feel
+ */
+const HangingTempleBell: React.FC<{ side: "left" | "right"; chainHeight?: number }> = ({
+  side,
+}) => {
+  return (
+    <motion.div
+      animate={{ rotate: side === "left" ? [-2.5, 2.5, -2.5] : [2.5, -2.5, 2.5] }}
+      transition={{ duration: 4.8, repeat: Infinity, ease: "easeInOut" }}
+      className={`absolute top-0 pointer-events-none select-none z-20 flex flex-col items-center ${
+        side === "left" ? "left-4 sm:left-10 lg:left-16" : "right-4 sm:right-10 lg:right-16"
+      }`}
+      style={{ transformOrigin: "top center" }}
+    >
+      <div className="relative w-10 sm:w-14 md:w-16 h-28 sm:h-36 md:h-44">
+        <Image
+          src="/events/hanging-temple-bell.png"
+          alt="Traditional Brass Temple Bell"
+          fill
+          className="object-contain filter drop-shadow-[0_6px_14px_rgba(80,40,15,0.35)]"
+          priority
+          unoptimized
+        />
+      </div>
+    </motion.div>
+  );
+};
+
 export const PreWeddingVideo: React.FC = () => {
   const { video } = weddingConfig;
   const sectionRef = useRef<HTMLElement>(null);
@@ -49,143 +79,211 @@ export const PreWeddingVideo: React.FC = () => {
       ref={sectionRef}
       id="pre-wedding-video"
       aria-label="Pre-Wedding Film"
-      className="relative w-full overflow-hidden py-14 sm:py-18 md:py-24 bg-transparent"
+      className="relative w-full overflow-hidden pt-8 pb-3 sm:pt-10 sm:pb-4 md:pt-12 md:pb-6 bg-transparent text-[#42100b] select-none"
     >
-      {/* 
-        1. FLOATING SECTION HEADING (No generic white box)
-        "A GLIMPSE OF US"
-        "Our story, captured in beautiful moments."
-      */}
-      <motion.div
-        initial={false}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-8 sm:mb-12 px-4 relative z-30 flex flex-col items-center"
-      >
-        {/* Subtle gold crest */}
-        <div className="flex items-center justify-center gap-2 mb-2 select-none">
-          <span className="w-8 sm:w-14 h-px bg-gradient-to-r from-transparent to-[#b88636]" />
-          <span className="text-[#b88636] text-xs">❦</span>
-          <span className="font-cinzel text-[10.5px] sm:text-xs font-bold tracking-[0.26em] text-[#805527] uppercase">
-            A CINEMATIC MEMORY
-          </span>
-          <span className="text-[#b88636] text-xs">❦</span>
-          <span className="w-8 sm:w-14 h-px bg-gradient-to-l from-transparent to-[#b88636]" />
+      {/* ─────────────────────────────────────────────────────────────
+       * BACKGROUND DECORATIVE ARTWORK (Kolam & Sacred Lotus Embellishments)
+       * ───────────────────────────────────────────────────────────── */}
+      <div className="absolute inset-0 pointer-events-none select-none overflow-hidden z-0">
+        {/* Sacred Lotus Mandala Kolam on Left */}
+        <div className="absolute -top-10 -left-10 w-48 sm:w-64 h-48 sm:h-64 opacity-[0.18]">
+          <Image
+            src="/decoration/Lotus-Mandala.png"
+            alt=""
+            fill
+            className="object-contain filter sepia"
+            unoptimized
+          />
         </div>
 
-        <h2 className="font-cinzel text-xl sm:text-3xl md:text-5xl font-extrabold tracking-wide sm:tracking-[0.16em] text-[#42100b] uppercase leading-tight px-2">
-          {video.heading || "A GLIMPSE OF US"}
-        </h2>
+        {/* Sacred Lotus Mandala Kolam on Right */}
+        <div className="absolute -top-10 -right-10 w-48 sm:w-64 h-48 sm:h-64 opacity-[0.18]">
+          <Image
+            src="/decoration/Lotus-Mandala.png"
+            alt=""
+            fill
+            className="object-contain filter sepia"
+            unoptimized
+          />
+        </div>
 
-        <p className="font-cormorant text-base sm:text-lg md:text-xl italic text-[#744c2c] font-semibold mt-1.5">
-          {video.subheading || "Our story, captured in beautiful moments."}
-        </p>
+        {/* Blooming Pink & Gold Lotus Accent */}
+        <div className="absolute bottom-6 left-2 sm:left-6 w-20 sm:w-28 h-20 sm:h-28 opacity-[0.22]">
+          <Image
+            src="/events/lotus-corner.png"
+            alt=""
+            fill
+            className="object-contain"
+            unoptimized
+          />
+        </div>
+      </div>
 
-        <div className="w-16 h-0.5 bg-gradient-to-r from-transparent via-[#b88636] to-transparent mt-2.5" />
-      </motion.div>
+      {/* Swaying Traditional Brass Temple Bells (Image 1 Signature) */}
+      <HangingTempleBell side="left" />
+      <HangingTempleBell side="right" />
 
-      {/* 
-        2. CINEMATIC 16:9 VIDEO CONTAINER WITH GOLD-EDGED TREATMENT
-      */}
-      <div className="relative max-w-4xl mx-auto px-4 sm:px-6 md:px-8 z-20">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* ─────────────────────────────────────────────────────────────
+         * 1. SECTION HEADING (Attractive Architectural Royal Plaque)
+         * ───────────────────────────────────────────────────────────── */}
         <motion.div
-          initial={false}
-          animate={{ opacity: 1, scale: 1 }}
-          className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(80,45,20,0.25)] border-2 border-[#b88636]/80 bg-[#16100c] group cursor-pointer"
-          onClick={togglePlay}
+          initial={{ opacity: 0, y: 15 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 15 }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-8 sm:mb-10 flex flex-col items-center"
         >
-          {/* Thin inner gold rim */}
-          <div className="absolute inset-1 rounded-xl sm:rounded-2xl border border-[#ffd700]/30 pointer-events-none z-20" />
-
-          {/* 16:9 Aspect Ratio Frame */}
-          <div className="relative aspect-[16/9] w-full bg-[#0d0a07]">
-            {/* HTML5 Video Element */}
-            <video
-              ref={videoRef}
-              src={video.videoSrc}
-              poster={video.posterSrc}
-              playsInline
-              preload="metadata"
-              onEnded={() => setIsPlaying(false)}
-              className="w-full h-full object-cover"
-            />
-
-            {/* Poster fallback image if video hasn't started */}
-            {!hasStarted && (
-              <div className="absolute inset-0 z-10">
-                <Image
-                  src={video.posterSrc}
-                  alt="Pre-wedding video thumbnail"
-                  fill
-                  sizes="(max-width: 1024px) 100vw, 896px"
-                  className="object-cover filter brightness-[0.88] contrast-[1.02]"
-                  unoptimized
-                  priority
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 pointer-events-none" />
-              </div>
-            )}
-
-            {/* Custom Play Button Overlay (when paused or unstarted) */}
-            {!isPlaying && (
-              <div className="absolute inset-0 flex items-center justify-center z-25 pointer-events-none">
-                <motion.div
-                  whileHover={shouldReduceMotion ? {} : { scale: 1.08 }}
-                  whileTap={shouldReduceMotion ? {} : { scale: 0.95 }}
-                  className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-[#fff7e6]/90 to-[#edd6a4]/90 backdrop-blur-md flex items-center justify-center border-2 border-[#d4af37] shadow-[0_8px_30px_rgba(0,0,0,0.4)]"
-                >
-                  {/* Subtle pulsing gold ring */}
-                  <div className="absolute inset-[-6px] rounded-full border border-[#d4af37]/60 animate-ping opacity-60 pointer-events-none" />
-                  <Play size={28} className="text-[#63140d] fill-[#63140d] ml-1 sm:ml-1.5" />
-                </motion.div>
-              </div>
-            )}
-
-            {/* Accessible Video Control Bar (Visible when video has started or on hover) */}
-            {hasStarted && (
-              <div
-                className={`absolute bottom-0 inset-x-0 h-14 bg-gradient-to-t from-black/85 via-black/50 to-transparent flex items-center justify-between px-4 sm:px-6 text-white text-xs z-30 transition-opacity duration-300 ${
-                  isPlaying ? "opacity-0 group-hover:opacity-100" : "opacity-100"
-                }`}
-                onClick={(e) => e.stopPropagation()}
-              >
-                {/* Play/Pause Toggle */}
-                <button
-                  type="button"
-                  onClick={togglePlay}
-                  aria-label={isPlaying ? "Pause video" : "Play video"}
-                  className="p-1.5 rounded-full hover:bg-white/20 text-[#ffd700] transition-colors cursor-pointer"
-                >
-                  {isPlaying ? <Pause size={18} /> : <Play size={18} className="fill-[#ffd700]" />}
-                </button>
-
-                {/* Center Title */}
-                <span className="font-cinzel text-[11px] sm:text-xs font-semibold tracking-widest text-[#fffdf8] uppercase select-none">
-                  A GLIMPSE OF US • PRE-WEDDING FILM
-                </span>
-
-                {/* Right controls: Mute + Fullscreen */}
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={toggleMute}
-                    aria-label={isMuted ? "Unmute audio" : "Mute audio"}
-                    className="p-1.5 rounded-full hover:bg-white/20 text-[#ffd700] transition-colors cursor-pointer"
-                  >
-                    {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleFullscreen}
-                    aria-label="Enter fullscreen"
-                    className="p-1.5 rounded-full hover:bg-white/20 text-[#ffd700] transition-colors cursor-pointer"
-                  >
-                    <Maximize2 size={16} />
-                  </button>
-                </div>
-              </div>
-            )}
+          {/* Auspicious Pill Tag */}
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#fbf2e3] border border-[#d4af37]/70 shadow-2xs mb-2.5">
+            <span className="text-[#b88636] text-[10px]">✦</span>
+            <span className="font-cinzel text-[10px] sm:text-xs font-bold tracking-[0.22em] text-[#742719] uppercase">
+              Cinematic Glimpse
+            </span>
+            <span className="text-[#b88636] text-[10px]">✦</span>
           </div>
+
+          {/* Royal Architectural Cartouche Heading Plaque */}
+          <div className="relative inline-flex items-center justify-center px-6 sm:px-10 py-2 sm:py-2.5 rounded-2xl bg-gradient-to-r from-[#5a1012] via-[#7e181e] to-[#5a1012] border-2 border-[#d4af37] shadow-[0_8px_24px_rgba(90,20,10,0.25)]">
+            {/* Corner Filigree Brackets */}
+            <div className="absolute top-1 left-1.5 w-2.5 h-2.5 border-t border-l border-[#ffd700]/70 pointer-events-none" />
+            <div className="absolute top-1 right-1.5 w-2.5 h-2.5 border-t border-r border-[#ffd700]/70 pointer-events-none" />
+            <div className="absolute bottom-1 left-1.5 w-2.5 h-2.5 border-b border-l border-[#ffd700]/70 pointer-events-none" />
+            <div className="absolute bottom-1 right-1.5 w-2.5 h-2.5 border-b border-r border-[#ffd700]/70 pointer-events-none" />
+
+            {/* Left Gold Wing Flourish */}
+            <span className="hidden sm:inline-block w-8 sm:w-12 h-px bg-gradient-to-r from-transparent via-[#ffd700] to-transparent mr-3" />
+
+            {/* Main Title Heading */}
+            <h2 className="font-cinzel text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black tracking-[0.2em] sm:tracking-[0.24em] text-[#fffdf8] uppercase leading-tight [text-shadow:_0_1px_3px_rgba(0,0,0,0.6),_0_0_12px_rgba(255,215,0,0.35)]">
+              {video.heading || "A Glimpse of Our Journey"}
+            </h2>
+
+            {/* Right Gold Wing Flourish */}
+            <span className="hidden sm:inline-block w-8 sm:w-12 h-px bg-gradient-to-r from-transparent via-[#ffd700] to-transparent ml-3" />
+          </div>
+
+          {/* Subtitle in Distinct Italic Serif */}
+          <p className="font-cormorant italic text-base sm:text-lg md:text-xl text-[#6e3a1f] font-bold tracking-wide mt-3 max-w-xl">
+            &ldquo;{video.subheading || "Moments that made our story special"}&rdquo;
+          </p>
         </motion.div>
+
+        {/* ─────────────────────────────────────────────────────────────
+         * 2. VIDEO PLAYER WITH ORNATE GOLD-CARVED CARTOUCHE FRAME (Enlarged)
+         * ───────────────────────────────────────────────────────────── */}
+        <div className="relative w-full max-w-5xl lg:max-w-5xl xl:max-w-6xl mx-auto">
+          
+          {/* Subtle Golden Carved Cartouche Halo Backdrop */}
+          <div
+            className="absolute -inset-2.5 sm:-inset-4 rounded-3xl sm:rounded-[2rem] pointer-events-none -z-10"
+            style={{
+              background:
+                "radial-gradient(ellipse at center, rgba(255,225,130,0.4) 0%, rgba(212,175,55,0.15) 60%, transparent 80%)",
+            }}
+          />
+
+          {/* Main Video Frame */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.96 }}
+            transition={{ duration: 0.65, ease: "easeOut" }}
+            className="relative rounded-2xl sm:rounded-3xl p-1.5 sm:p-2 bg-gradient-to-b from-[#ffd700] via-[#c99f58] to-[#8a5822] shadow-[0_16px_48px_rgba(80,45,20,0.22)]"
+          >
+            {/* Corner Decorative Finials */}
+            <div className="absolute top-2 left-2 z-20 w-3 h-3 rounded-full bg-[#ffd700] shadow-[0_0_8px_#ffd700]" />
+            <div className="absolute top-2 right-2 z-20 w-3 h-3 rounded-full bg-[#ffd700] shadow-[0_0_8px_#ffd700]" />
+            <div className="absolute bottom-2 left-2 z-20 w-3 h-3 rounded-full bg-[#ffd700] shadow-[0_0_8px_#ffd700]" />
+            <div className="absolute bottom-2 right-2 z-20 w-3 h-3 rounded-full bg-[#ffd700] shadow-[0_0_8px_#ffd700]" />
+
+            {/* Video Container */}
+            <div
+              className="relative w-full aspect-video rounded-xl sm:rounded-2xl overflow-hidden bg-black cursor-pointer group"
+              onClick={togglePlay}
+            >
+              <video
+                ref={videoRef}
+                src={video.videoSrc}
+                poster={video.posterSrc}
+                playsInline
+                loop
+                preload="metadata"
+                className="w-full h-full object-cover"
+                onPlay={() => setIsPlaying(true)}
+                onPause={() => setIsPlaying(false)}
+              />
+
+              {/* Big Center Golden Play Button */}
+              {!isPlaying && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/35 backdrop-blur-2xs transition-opacity duration-300">
+                  <motion.div
+                    whileHover={shouldReduceMotion ? {} : { scale: 1.1 }}
+                    whileTap={shouldReduceMotion ? {} : { scale: 0.95 }}
+                    className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(255,215,0,0.6)]"
+                    style={{
+                      background: "linear-gradient(135deg, #ffd700 0%, #b88636 50%, #7a482b 100%)",
+                    }}
+                  >
+                    <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-full bg-[#3d1308] border border-[#ffd700] flex items-center justify-center text-[#ffd700] pl-1">
+                      <Play size={24} className="sm:w-7 sm:h-7 fill-[#ffd700]" />
+                    </div>
+                  </motion.div>
+                </div>
+              )}
+
+              {/* Bottom Subtle Overlay Controls */}
+              {hasStarted && (
+                <div
+                  className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 to-transparent flex items-center justify-between text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    type="button"
+                    onClick={togglePlay}
+                    aria-label={isPlaying ? "Pause video" : "Play video"}
+                    className="p-1.5 rounded-full hover:bg-white/20 transition-colors"
+                  >
+                    {isPlaying ? <Pause size={18} /> : <Play size={18} />}
+                  </button>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={toggleMute}
+                      aria-label={isMuted ? "Unmute video" : "Mute video"}
+                      className="p-1.5 rounded-full hover:bg-white/20 transition-colors"
+                    >
+                      {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleFullscreen}
+                      aria-label="Fullscreen video"
+                      className="p-1.5 rounded-full hover:bg-white/20 transition-colors"
+                    >
+                      <Maximize2 size={18} />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+
+        </div>
+
+        {/* Auspicious Lotus Center Motif Divider */}
+        <div className="flex items-center justify-center mt-4 sm:mt-6 select-none pointer-events-none">
+          <div className="relative w-20 sm:w-24 h-8 sm:h-9">
+            <Image
+              src="/decoration/Lotus-Mandala.png"
+              alt="Lotus Motif"
+              fill
+              className="object-contain drop-shadow-[0_4px_10px_rgba(180,120,30,0.3)]"
+              unoptimized
+            />
+          </div>
+        </div>
+
       </div>
     </section>
   );

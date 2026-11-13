@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
 import { GrandCoupleShowcase } from "./GrandCoupleShowcase";
 import { WeddingCelebrationsSection } from "./WeddingCelebrations";
 import { PreWeddingVideo } from "./PreWeddingVideo";
@@ -14,23 +13,39 @@ import { AhvaanamFooter } from "./AhvaanamFooter";
  * SectionsAfterOpening
  *
  * Renders all sections after the Gopuram opening scene (Section 1).
- * Continuous Wedding Celebration visual foundation spanning:
- * Section 2: Wedding Celebrations
- * Section 3: Pre-Wedding Video
- * Section 4: Our Journey Gallery
- * Section 5: Family Details
- * Section 6: RSVP / Celebration Attendance & Countdown
- * Section 7: Ahvaanam Footer (Preserves scenic sunset temple lake background)
+ *
+ * Architecture:
+ * 1. Grand Couple Showcase:
+ *    Dedicated couple showcase portrait with its own architectural background.
+ *
+ * 2. Continuous Wedding Celebration Canvas (Sections 2 to 7):
+ *    Single continuous, unified canvas spanning:
+ *    - Section 2: Wedding Celebrations
+ *    - Section 3: Pre-Wedding Video
+ *    - Section 4: Our Journey Gallery
+ *    - Section 5: Family Details
+ *    - Section 6: RSVP & Wedding Countdown
+ *    - Section 7: Ahvaanam Brand Footer
+ *
+ *    Uses user-provided seamless repeating temple pillar parchment background
+ *    tiling seamlessly (repeat-y, 100% auto) so sections can be shuffled in Ahvaanam
+ *    with 100% continuous visual consistency.
  */
 export const SectionsAfterOpening: React.FC = () => {
   return (
     <div className="relative w-full z-20">
       {/* 
-        CONTINUOUS WEDDING CELEBRATION FOUNDATION (Sections 2 to 6)
-        Authentic Indian floral botanical parchment foundation across all sections.
+        1. GRAND COUPLE SHOWCASE (Section 1.5)
+        Has its own dedicated couple showcase theme and background.
+      */}
+      <GrandCoupleShowcase />
+
+      {/* 
+        2. CONTINUOUS WEDDING CELEBRATION FOUNDATION (Sections 2 to 7)
+        Single unified seamless background across all celebration sections.
       */}
       <div className="relative w-full overflow-hidden bg-[#faedd4]">
-        {/* Continuous Wedding Celebration Background Image (No random mandalas or corner sketches) */}
+        {/* Continuous Seamless Repeating Temple Pillar & Parchment Background */}
         <div
           className="absolute inset-0 pointer-events-none select-none z-0"
           style={{
@@ -41,9 +56,8 @@ export const SectionsAfterOpening: React.FC = () => {
           }}
         />
 
-        {/* Live Content of Sections (Transparent over continuous celebration foundation) */}
+        {/* Live Content of Sections (Transparent over continuous canvas) */}
         <div className="relative z-10">
-          <GrandCoupleShowcase />
           <WeddingCelebrationsSection />
           <PreWeddingVideo />
           <OurJourneyGallery />

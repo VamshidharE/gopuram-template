@@ -3,10 +3,12 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence, useInView, useReducedMotion } from "framer-motion";
-import { X, ChevronLeft, ChevronRight, Maximize2, Sparkles } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Maximize2 } from "lucide-react";
 import { weddingConfig, GalleryPhoto } from "@/config/weddingConfig";
 
-/* ─────────────── LIGHTBOX FULL-SCREEN VIEWER ─────────────── */
+/* ─────────────────────────────────────────────────────────────
+ * LIGHTBOX FULL-SCREEN VIEWER
+ * ───────────────────────────────────────────────────────────── */
 interface LightboxProps {
   photos: GalleryPhoto[];
   currentIndex: number;
@@ -25,7 +27,6 @@ const Lightbox: React.FC<LightboxProps> = ({ photos, currentIndex, onClose, onNa
     onNavigate((currentIndex + 1) % photos.length);
   }, [currentIndex, photos.length, onNavigate]);
 
-  // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -65,7 +66,7 @@ const Lightbox: React.FC<LightboxProps> = ({ photos, currentIndex, onClose, onNa
 
       {/* Main Image Container */}
       <div
-        className="relative max-w-4xl max-h-[80vh] w-full aspect-[4/5] sm:aspect-[4/3] flex items-center justify-center"
+        className="relative max-w-4xl max-h-[82vh] w-full aspect-[4/5] sm:aspect-[4/3] flex items-center justify-center"
         onClick={(e) => e.stopPropagation()}
       >
         <AnimatePresence mode="wait">
@@ -127,33 +128,44 @@ const Lightbox: React.FC<LightboxProps> = ({ photos, currentIndex, onClose, onNa
   );
 };
 
-/* ─────────────── MAIN GALLERY COMPONENT ─────────────── */
+/* ─────────────────────────────────────────────────────────────
+ * MAIN OUR JOURNEY GALLERY COMPONENT (MATCHING IMAGE 1)
+ * Enhanced with:
+ * - Auto-scrolling carousel (pauses on hover/interaction)
+ * - Attractive Architectural Royal Cartouche Plaque Title
+ * - Traditional Kolam Mandalas & Sacred Lotus Background Accents
+ * ───────────────────────────────────────────────────────────── */
 export const OurJourneyGallery: React.FC = () => {
   const { gallery } = weddingConfig;
+  const photos = gallery.photos;
   const sectionRef = useRef<HTMLElement>(null);
-  const isInView = useInView(sectionRef, { once: true, margin: "-10%" });
+  const isInView = useInView(sectionRef, { once: true, amount: 0.15 });
   const shouldReduceMotion = useReducedMotion();
 
-  const photos = gallery.photos;
-  const [featuredIndex, setFeaturedIndex] = useState(0);
+  // Active center index
+  const [activeIndex, setActiveIndex] = useState<number>(2);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [isPaused, setIsPaused] = useState<boolean>(false);
 
-  // Desktop: Auto-switch focus photograph every 4.5 seconds
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setFeaturedIndex((prev) => (prev + 1) % photos.length);
-    }, 4500);
-    return () => clearInterval(timer);
+  const handlePrev = useCallback(() => {
+    setActiveIndex((prev) => (prev - 1 + photos.length) % photos.length);
   }, [photos.length]);
 
-  const featuredPhoto = photos[featuredIndex] || photos[0];
-  const supportingPhotos = photos.map((p, idx) => ({ ...p, originalIndex: idx }));
+  const handleNext = useCallback(() => {
+    setActiveIndex((prev) => (prev + 1) % photos.length);
+  }, [photos.length]);
 
-  // Mobile: Seamless looped photos array
-  const loopedPhotos = [...photos, ...photos];
+  // Auto-scroll loop every 3.8 seconds
+  useEffect(() => {
+    if (isPaused || lightboxIndex !== null || shouldReduceMotion || !isInView) return;
+    const timer = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % photos.length);
+    }, 3800);
+    return () => clearInterval(timer);
+  }, [isPaused, lightboxIndex, shouldReduceMotion, isInView, photos.length]);
 
   const openLightbox = (index: number) => {
-    setLightboxIndex(index % photos.length);
+    setLightboxIndex(index);
   };
 
   const closeLightbox = () => {
@@ -163,234 +175,304 @@ export const OurJourneyGallery: React.FC = () => {
   return (
     <section
       ref={sectionRef}
-      id="photo-gallery"
-      aria-label="Moments We Treasure"
-      className="relative w-full overflow-hidden py-10 sm:py-16 md:py-24 bg-transparent"
+      id="our-gallery"
+      aria-label="Our Photo Gallery"
+      className="relative w-full overflow-hidden bg-transparent pt-6 pb-8 sm:pt-8 sm:pb-10 md:pt-10 md:pb-12 text-[#42100b] select-none"
     >
-      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
-        {/* 
-          1. FLOATING SECTION HEADING (No generic white box)
-          "MOMENTS WE TREASURE"
-          "Every picture tells a part of our story."
-        */}
+      {/* ─────────────────────────────────────────────────────────────
+       * BACKGROUND DECORATIVE ARTWORK (Kolam & Sacred Lotus Embellishments)
+       * ───────────────────────────────────────────────────────────── */}
+      <div className="absolute inset-0 pointer-events-none select-none overflow-hidden z-0">
+        {/* Sacred Lotus Mandala Kolam on Left */}
+        <div className="absolute -top-12 -left-10 w-52 sm:w-72 h-52 sm:h-72 opacity-[0.18]">
+          <Image
+            src="/decoration/Lotus-Mandala.png"
+            alt=""
+            fill
+            className="object-contain filter sepia"
+            unoptimized
+          />
+        </div>
+
+        {/* Sacred Lotus Mandala Kolam on Right */}
+        <div className="absolute -top-12 -right-10 w-52 sm:w-72 h-52 sm:h-72 opacity-[0.18]">
+          <Image
+            src="/decoration/Lotus-Mandala.png"
+            alt=""
+            fill
+            className="object-contain filter sepia"
+            unoptimized
+          />
+        </div>
+
+        {/* Blooming Pink & Gold Lotus Accent near stage on Left */}
+        <div className="absolute top-1/2 -left-4 w-20 sm:w-28 h-20 sm:h-28 opacity-[0.22]">
+          <Image
+            src="/events/lotus-corner.png"
+            alt=""
+            fill
+            className="object-contain"
+            unoptimized
+          />
+        </div>
+
+        {/* Blooming Pink & Gold Lotus Accent near stage on Right */}
+        <div className="absolute top-1/2 -right-4 w-20 sm:w-28 h-20 sm:h-28 opacity-[0.22] scale-x-[-1]">
+          <Image
+            src="/events/lotus-corner.png"
+            alt=""
+            fill
+            className="object-contain"
+            unoptimized
+          />
+        </div>
+      </div>
+
+      <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        
+        {/* ─────────────────────────────────────────────────────────────
+         * 1. SECTION HEADER (Attractive Architectural Royal Plaque)
+         * ───────────────────────────────────────────────────────────── */}
         <motion.div
-          initial={false}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8 sm:mb-12 px-4 flex flex-col items-center"
+          initial={{ opacity: 0, y: 15 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 15 }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-6 sm:mb-10 md:mb-12 flex flex-col items-center"
         >
-          {/* Subtle gold crest */}
-          <div className="flex items-center justify-center gap-2 mb-2 select-none">
-            <span className="w-8 sm:w-14 h-px bg-gradient-to-r from-transparent to-[#b88636]" />
-            <span className="text-[#b88636] text-xs">❦</span>
-            <span className="font-cinzel text-[10.5px] sm:text-xs font-bold tracking-[0.26em] text-[#805527] uppercase">
-              OUR WEDDING ALBUM
+          {/* Auspicious Pill Tag */}
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#fbf2e3] border border-[#d4af37]/70 shadow-2xs mb-2.5">
+            <span className="text-[#b88636] text-[10px]">✦</span>
+            <span className="font-cinzel text-[10px] sm:text-xs font-bold tracking-[0.22em] text-[#742719] uppercase">
+              Visual Memories
             </span>
-            <span className="text-[#b88636] text-xs">❦</span>
-            <span className="w-8 sm:w-14 h-px bg-gradient-to-l from-transparent to-[#b88636]" />
+            <span className="text-[#b88636] text-[10px]">✦</span>
           </div>
 
-          <h2 className="font-cinzel text-xl sm:text-3xl md:text-5xl font-extrabold tracking-wide sm:tracking-[0.16em] text-[#42100b] uppercase leading-tight px-2">
-            {gallery.heading || "MOMENTS WE TREASURE"}
-          </h2>
+          {/* Royal Architectural Cartouche Heading Plaque */}
+          <div className="relative inline-flex items-center justify-center px-6 sm:px-10 py-2 sm:py-2.5 rounded-2xl bg-gradient-to-r from-[#5a1012] via-[#7e181e] to-[#5a1012] border-2 border-[#d4af37] shadow-[0_8px_24px_rgba(90,20,10,0.25)]">
+            {/* Corner Filigree Brackets */}
+            <div className="absolute top-1 left-1.5 w-2.5 h-2.5 border-t border-l border-[#ffd700]/70 pointer-events-none" />
+            <div className="absolute top-1 right-1.5 w-2.5 h-2.5 border-t border-r border-[#ffd700]/70 pointer-events-none" />
+            <div className="absolute bottom-1 left-1.5 w-2.5 h-2.5 border-b border-l border-[#ffd700]/70 pointer-events-none" />
+            <div className="absolute bottom-1 right-1.5 w-2.5 h-2.5 border-b border-r border-[#ffd700]/70 pointer-events-none" />
 
-          <p className="font-cormorant text-base sm:text-lg md:text-xl italic text-[#744c2c] font-semibold mt-1.5">
-            {gallery.subheading || "Every picture tells a part of our story."}
+            {/* Left Gold Wing Flourish */}
+            <span className="hidden sm:inline-block w-8 sm:w-12 h-px bg-gradient-to-r from-transparent via-[#ffd700] to-transparent mr-3" />
+
+            {/* Main Title Heading */}
+            <h2 className="font-cinzel text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black tracking-[0.2em] sm:tracking-[0.24em] text-[#fffdf8] uppercase leading-tight [text-shadow:_0_1px_3px_rgba(0,0,0,0.6),_0_0_12px_rgba(255,215,0,0.35)]">
+              Our Gallery
+            </h2>
+
+            {/* Right Gold Wing Flourish */}
+            <span className="hidden sm:inline-block w-8 sm:w-12 h-px bg-gradient-to-r from-transparent via-[#ffd700] to-transparent ml-3" />
+          </div>
+
+          {/* Subtitle in Distinct Italic Serif */}
+          <p className="font-cormorant italic text-base sm:text-lg md:text-xl text-[#6e3a1f] font-bold tracking-wide mt-3 max-w-xl">
+            &ldquo;Captured with love and cherished forever&rdquo;
           </p>
-
-          <div className="w-16 h-0.5 bg-gradient-to-r from-transparent via-[#b88636] to-transparent mt-2.5" />
         </motion.div>
 
-        {/* 
-          2. DESKTOP: BALANCED EDITORIAL SHOWCASE
-          Featured hero photograph in the center with auto-focus switching;
-          Flanked by clean vertical portrait supporting cards (object-top to preserve subjects).
-        */}
-        <div className="hidden lg:grid grid-cols-12 gap-6 items-center max-w-5xl mx-auto my-6">
-          {/* LEFT SUPPORTING COLUMN (2 images, clean portrait layout) */}
-          <div className="col-span-3 flex flex-col gap-6 justify-center items-end">
-            {supportingPhotos.slice(1, 3).map((photo) => {
-              const isSelected = photo.originalIndex === featuredIndex;
-              return (
-                <motion.div
-                  key={photo.id}
-                  whileHover={shouldReduceMotion ? {} : { scale: 1.04 }}
-                  onClick={() => setFeaturedIndex(photo.originalIndex)}
-                  className={`relative group cursor-pointer transition-all duration-300 rounded-xl overflow-hidden shadow-[0_8px_20px_rgba(80,45,20,0.16)] w-[190px] xl:w-[210px] aspect-[3/4] ${
-                    isSelected
-                      ? "border-2 border-[#ffd700] ring-2 ring-[#ffd700]/50 scale-102"
-                      : "border border-[#b88636]/70 hover:border-[#ffd700]"
-                  }`}
-                >
-                  {/* Thin inner gold rim */}
-                  <div className="absolute inset-1 rounded-lg border border-[#ffd700]/30 pointer-events-none z-10" />
-
-                  <Image
-                    src={photo.src}
-                    alt={photo.alt}
-                    fill
-                    sizes="220px"
-                    className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
-                    unoptimized
-                  />
-
-                  {/* Caption Bar on Hover */}
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2.5 z-10">
-                    <p className="font-cormorant text-xs italic text-[#fffdf8] font-medium truncate">
-                      {photo.alt}
-                    </p>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-
-          {/* CENTER FEATURED HERO PHOTOGRAPH */}
-          <div className="col-span-6 flex flex-col items-center">
-            <motion.div
-              key={`featured-${featuredPhoto.id}`}
-              initial={{ opacity: 0, scale: 0.97 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
-              className="relative w-full max-w-[420px] aspect-[4/5] rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(80,45,20,0.26)] border-2 border-[#b88636] group cursor-pointer"
-              onClick={() => openLightbox(featuredIndex)}
-            >
-              {/* Gold Ornamental Corner Brackets */}
-              <span className="absolute top-2 left-2 w-3.5 h-3.5 border-t-2 border-l-2 border-[#d4af37] z-20 pointer-events-none" />
-              <span className="absolute top-2 right-2 w-3.5 h-3.5 border-t-2 border-r-2 border-[#d4af37] z-20 pointer-events-none" />
-              <span className="absolute bottom-2 left-2 w-3.5 h-3.5 border-b-2 border-l-2 border-[#d4af37] z-20 pointer-events-none" />
-              <span className="absolute bottom-2 right-2 w-3.5 h-3.5 border-b-2 border-r-2 border-[#d4af37] z-20 pointer-events-none" />
-
-              {/* Main Image */}
-              <Image
-                src={featuredPhoto.src}
-                alt={featuredPhoto.alt}
-                fill
-                sizes="420px"
-                className="object-cover object-top transition-transform duration-700 ease-out group-hover:scale-104"
-                priority
-                unoptimized
-              />
-
-              {/* Bottom Caption Vignette */}
-              <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/85 via-black/40 to-transparent flex items-end justify-between p-4 z-10">
-                <p className="font-cormorant text-base text-[#fffdf8] italic font-medium drop-shadow-sm">
-                  {featuredPhoto.alt}
-                </p>
-                <button
-                  type="button"
-                  aria-label="View full-screen"
-                  className="p-1.5 rounded-full bg-white/20 hover:bg-white/40 text-white transition-colors"
-                >
-                  <Maximize2 size={14} />
-                </button>
-              </div>
-            </motion.div>
-
-            {/* Instruction hint */}
-            <p className="font-cinzel text-[10px] tracking-widest text-[#805527] uppercase mt-3 select-none">
-              Click photograph to view full-screen
-            </p>
-          </div>
-
-          {/* RIGHT SUPPORTING COLUMN (2 images, clean portrait layout) */}
-          <div className="col-span-3 flex flex-col gap-6 justify-center items-start">
-            {supportingPhotos.slice(3, 5).map((photo) => {
-              const isSelected = photo.originalIndex === featuredIndex;
-              return (
-                <motion.div
-                  key={photo.id}
-                  whileHover={shouldReduceMotion ? {} : { scale: 1.04 }}
-                  onClick={() => setFeaturedIndex(photo.originalIndex)}
-                  className={`relative group cursor-pointer transition-all duration-300 rounded-xl overflow-hidden shadow-[0_8px_20px_rgba(80,45,20,0.16)] w-[190px] xl:w-[210px] aspect-[3/4] ${
-                    isSelected
-                      ? "border-2 border-[#ffd700] ring-2 ring-[#ffd700]/50 scale-102"
-                      : "border border-[#b88636]/70 hover:border-[#ffd700]"
-                  }`}
-                >
-                  {/* Thin inner gold rim */}
-                  <div className="absolute inset-1 rounded-lg border border-[#ffd700]/30 pointer-events-none z-10" />
-
-                  <Image
-                    src={photo.src}
-                    alt={photo.alt}
-                    fill
-                    sizes="220px"
-                    className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
-                    unoptimized
-                  />
-
-                  {/* Caption Bar on Hover */}
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2.5 z-10">
-                    <p className="font-cormorant text-xs italic text-[#fffdf8] font-medium truncate">
-                      {photo.alt}
-                    </p>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* 
-          3. MOBILE: CONTINUOUS AUTOMATIC SCROLLING LOOP
-          Seamless looping marquee of photographs with touch interaction to open lightbox
-        */}
-        <div className="lg:hidden w-full overflow-hidden my-3">
-          <motion.div
-            className="flex items-center gap-3.5 py-3 w-max"
-            animate={
-              shouldReduceMotion
-                ? {}
-                : {
-                    x: ["0%", "-50%"],
-                  }
-            }
-            transition={{
-              x: {
-                repeat: Infinity,
-                repeatType: "loop",
-                duration: 22,
-                ease: "linear",
-              },
-            }}
+        {/* ─────────────────────────────────────────────────────────────
+         * 2. EXPANDED AUTO-SCROLLING 3D COVERFLOW CAROUSEL
+         * ───────────────────────────────────────────────────────────── */}
+        <div
+          className="relative w-full py-4 sm:py-6"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+          onTouchStart={() => setIsPaused(true)}
+          onTouchEnd={() => {
+            // Resume after 4 seconds of touch inactivity
+            setTimeout(() => setIsPaused(false), 4000);
+          }}
+        >
+          {/* Left Arrow Button */}
+          <button
+            type="button"
+            onClick={handlePrev}
+            aria-label="Previous photo"
+            className="absolute left-2 sm:left-4 lg:left-6 top-1/2 -translate-y-1/2 z-40 w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full bg-[#fdfaf3]/95 hover:bg-[#fffdf8] border-2 border-[#d4af37] text-[#541c15] shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
           >
-            {loopedPhotos.map((photo, index) => (
-              <div
-                key={`${photo.id}-${index}`}
-                onClick={() => openLightbox(index % photos.length)}
-                className="relative w-[210px] sm:w-[250px] aspect-[3/4] rounded-xl overflow-hidden shrink-0 shadow-[0_8px_22px_rgba(80,45,20,0.2)] border border-[#b88636]/80 cursor-pointer active:scale-98 transition-transform"
-              >
-                {/* Thin inner gold rim */}
-                <div className="absolute inset-1 rounded-lg border border-[#ffd700]/30 pointer-events-none z-10" />
+            <ChevronLeft size={22} className="sm:w-7 sm:h-7" />
+          </button>
 
-                {/* Image */}
-                <Image
-                  src={photo.src}
-                  alt={photo.alt}
-                  fill
-                  sizes="250px"
-                  className="object-cover object-top"
-                  loading="eager"
-                  unoptimized
-                />
+          {/* Right Arrow Button */}
+          <button
+            type="button"
+            onClick={handleNext}
+            aria-label="Next photo"
+            className="absolute right-2 sm:right-4 lg:right-6 top-1/2 -translate-y-1/2 z-40 w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full bg-[#fdfaf3]/95 hover:bg-[#fffdf8] border-2 border-[#d4af37] text-[#541c15] shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
+          >
+            <ChevronRight size={22} className="sm:w-7 sm:h-7" />
+          </button>
 
-                {/* Caption bar */}
-                <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-end justify-between p-2.5 z-10">
-                  <span className="font-cormorant text-xs italic text-[#fffdf8] font-medium truncate">
-                    {photo.alt}
-                  </span>
-                  <Maximize2 size={12} className="text-white shrink-0 ml-1" />
-                </div>
-              </div>
-            ))}
-          </motion.div>
+          {/* 3D Perspective Stage Container */}
+          <div
+            className="relative w-full h-[320px] sm:h-[420px] md:h-[500px] lg:h-[560px] xl:h-[620px] flex items-center justify-center overflow-hidden"
+            style={{ perspective: "1200px" }}
+          >
+            {photos.map((photo, index) => {
+              // Calculate signed offset from activeIndex: -2, -1, 0, 1, 2
+              let offset = index - activeIndex;
+              const total = photos.length;
+              if (offset > total / 2) offset -= total;
+              if (offset < -total / 2) offset += total;
 
-          <div className="flex items-center justify-center gap-1.5 mt-2 select-none">
-            <span className="font-cinzel text-[10px] font-semibold text-[#805527] uppercase tracking-wider">
-              Auto-scrolling moments • Tap to enlarge
+              const isCenter = offset === 0;
+              const isVisible = Math.abs(offset) <= 2;
+
+              if (!isVisible) return null;
+
+              // 3D positioning styles based on offset
+              let rotateY = 0;
+              let scale = 1;
+              let xTranslate = "0%";
+              let zIndex = 10;
+              let opacity = 1;
+
+              if (isCenter) {
+                rotateY = 0;
+                scale = 1.12;
+                xTranslate = "0%";
+                zIndex = 30;
+                opacity = 1;
+              } else if (offset === -1) {
+                rotateY = 16;
+                scale = 0.94;
+                xTranslate = "-66%";
+                zIndex = 20;
+                opacity = 0.92;
+              } else if (offset === 1) {
+                rotateY = -16;
+                scale = 0.94;
+                xTranslate = "66%";
+                zIndex = 20;
+                opacity = 0.92;
+              } else if (offset === -2) {
+                rotateY = 26;
+                scale = 0.80;
+                xTranslate = "-125%";
+                zIndex = 10;
+                opacity = 0.72;
+              } else if (offset === 2) {
+                rotateY = -26;
+                scale = 0.80;
+                xTranslate = "125%";
+                zIndex = 10;
+                opacity = 0.72;
+              }
+
+              return (
+                <motion.div
+                  key={photo.id}
+                  onClick={() => {
+                    if (isCenter) {
+                      openLightbox(index);
+                    } else {
+                      setActiveIndex(index);
+                    }
+                  }}
+                  animate={
+                    shouldReduceMotion
+                      ? { opacity }
+                      : {
+                          rotateY,
+                          scale,
+                          x: xTranslate,
+                          opacity,
+                        }
+                  }
+                  transition={{
+                    duration: 0.55,
+                    ease: [0.25, 1, 0.5, 1],
+                  }}
+                  style={{
+                    zIndex,
+                    transformStyle: "preserve-3d",
+                  }}
+                  className={`absolute w-[210px] sm:w-[280px] md:w-[330px] lg:w-[380px] xl:w-[420px] aspect-[3/4] cursor-pointer rounded-2xl p-1.5 sm:p-2 md:p-2.5 transition-shadow duration-300 ${
+                    isCenter
+                      ? "bg-gradient-to-br from-[#ffd700] via-[#c99f58] to-[#8a5822] shadow-[0_22px_55px_rgba(80,35,15,0.42)] ring-2 ring-[#ffd700]"
+                      : "bg-gradient-to-br from-[#e4c590] via-[#b88636] to-[#8a5822] shadow-[0_12px_28px_rgba(80,35,15,0.22)] hover:opacity-100"
+                  }`}
+                >
+                  {/* Photo Canvas Container inside the frame */}
+                  <div className="relative w-full h-full rounded-xl overflow-hidden bg-[#241711]">
+                    {/* Inner gold hairline rim */}
+                    <div className="absolute inset-0 rounded-xl border border-[#ffd700]/50 pointer-events-none z-10" />
+
+                    {/* Corner Accent Dots on Center */}
+                    {isCenter && (
+                      <>
+                        <div className="absolute top-2 left-2 z-20 w-2.5 h-2.5 rounded-full bg-[#ffd700] shadow-[0_0_8px_#ffd700]" />
+                        <div className="absolute top-2 right-2 z-20 w-2.5 h-2.5 rounded-full bg-[#ffd700] shadow-[0_0_8px_#ffd700]" />
+                        <div className="absolute bottom-2 left-2 z-20 w-2.5 h-2.5 rounded-full bg-[#ffd700] shadow-[0_0_8px_#ffd700]" />
+                        <div className="absolute bottom-2 right-2 z-20 w-2.5 h-2.5 rounded-full bg-[#ffd700] shadow-[0_0_8px_#ffd700]" />
+                      </>
+                    )}
+
+                    {/* Image Preview */}
+                    <Image
+                      src={photo.src}
+                      alt={photo.alt}
+                      fill
+                      sizes="(max-width: 640px) 260px, (max-width: 1024px) 340px, 440px"
+                      className="object-cover object-top transition-transform duration-500 hover:scale-105"
+                      priority={isCenter}
+                      unoptimized
+                    />
+                    
+                    {/* Subtle warm vignette */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+
+                    {/* Bottom Caption Pill on Center */}
+                    {isCenter && (
+                      <div className="absolute inset-x-2 bottom-3 z-20 flex items-center justify-between px-3 py-1.5 rounded-lg bg-black/55 backdrop-blur-xs text-[#fffcf5]">
+                        <span className="font-cormorant text-xs sm:text-sm md:text-base italic font-semibold truncate">
+                          {photo.alt}
+                        </span>
+                        <Maximize2 size={13} className="text-[#ffd700] shrink-0 ml-1.5 opacity-90" />
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          {/* ─────────────────────────────────────────────────────────────
+           * 3. PAGINATION DOTS & FULLSCREEN HINT
+           * ───────────────────────────────────────────────────────────── */}
+          <div className="flex flex-col items-center justify-center mt-6 sm:mt-8 gap-2">
+            {/* 5 Dots Indicator */}
+            <div className="flex items-center justify-center gap-2.5">
+              {photos.map((_, idx) => {
+                const isActive = idx === activeIndex;
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setActiveIndex(idx)}
+                    aria-label={`Jump to photo ${idx + 1}`}
+                    className={`transition-all duration-300 rounded-full cursor-pointer ${
+                      isActive
+                        ? "w-3.5 h-3.5 bg-[#541c15] ring-2 ring-[#ffd700] shadow-sm scale-110"
+                        : "w-2.5 h-2.5 bg-[#b88636]/60 hover:bg-[#b88636]"
+                    }`}
+                  />
+                );
+              })}
+            </div>
+
+            {/* Helper Text */}
+            <span className="font-cinzel text-[10px] sm:text-[11px] font-semibold text-[#805527] uppercase tracking-wider mt-1">
+              Auto-scrolling moments • Click to view full-screen
             </span>
           </div>
+
         </div>
+
       </div>
 
       {/* 4. LIGHTBOX MODAL */}

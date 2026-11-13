@@ -1,85 +1,24 @@
 "use client";
 
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence, useInView, useReducedMotion } from "framer-motion";
 import { Calendar, Clock, MapPin, Navigation } from "lucide-react";
 import { WeddingEventData, weddingConfig } from "@/config/weddingConfig";
 
-/* ─────────────── Event Nav Marker ─────────────── */
-interface EventMarkerProps {
-  event: WeddingEventData;
-  isActive: boolean;
-  onClick: () => void;
+/* ─────────────────────────────────────────────────────────────
+ * Helper: Resolve ceremony artwork image for each event
+ * Directly uses the realistic photograph of the event ceremony setup
+ * ───────────────────────────────────────────────────────────── */
+function getEventArtwork(event: WeddingEventData): string {
+  return event.illustration;
 }
 
-const EventMarker: React.FC<EventMarkerProps> = ({ event, isActive, onClick }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    aria-label={`Select ${event.name} celebration`}
-    aria-current={isActive ? "step" : undefined}
-    className={`group relative flex flex-col items-center justify-between cursor-pointer transition-all duration-300 focus:outline-none shrink-0 ${
-      isActive
-        ? "scale-105 z-10"
-        : "opacity-75 hover:opacity-100 hover:scale-102"
-    }`}
-  >
-    {/* Architectural Arch Tab Card */}
-    <div
-      className={`relative w-[72px] h-[92px] sm:w-20 sm:h-24 md:w-24 md:h-28 flex flex-col items-center justify-between p-1.5 sm:p-2 transition-all duration-300 ${
-        isActive
-          ? "bg-[#fffdf8] shadow-[0_8px_22px_rgba(138,90,50,0.22)] border-2 border-[#b87d46]"
-          : "bg-[#fcf6ea]/90 hover:bg-[#fffdf8] border border-[#e4d4bf]"
-      }`}
-      style={{
-        borderRadius: "2rem 2rem 0.6rem 0.6rem", // Arch top
-      }}
-    >
-      {/* Top subtle gold highlight on active */}
-      {isActive && (
-        <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-[#ffd700] to-transparent rounded-t-full" />
-      )}
-
-      {/* Mini illustration */}
-      <div className="relative w-9 h-9 sm:w-11 sm:h-11 md:w-13 md:h-13 mt-0.5">
-        <Image
-          src={event.illustration}
-          alt={event.name}
-          fill
-          sizes="60px"
-          className="object-contain"
-          unoptimized
-        />
-      </div>
-
-      {/* Label and compact date */}
-      <div className="flex flex-col items-center text-center pb-0.5 leading-none">
-        <span
-          className={`font-cinzel text-[10.5px] sm:text-xs md:text-[13px] tracking-wide font-bold transition-colors ${
-            isActive ? "text-[#742719]" : "text-[#5e4332]"
-          }`}
-        >
-          {event.navLabel}
-        </span>
-        <span className="font-cormorant text-[9px] sm:text-[10px] text-[#8c6b50] mt-0.5 font-medium">
-          {event.date.split(",")[0] || event.date}
-        </span>
-      </div>
-    </div>
-
-    {/* Active Dot with Connector Track */}
-    <div className="flex items-center justify-center mt-2 sm:mt-2.5">
-      {isActive ? (
-        <span className="w-2.5 h-2.5 rounded-full bg-[#8e3622] ring-2 ring-[#ffd700]/70 shadow-xs" />
-      ) : (
-        <span className="w-1.5 h-1.5 rounded-full bg-[#c9a06c]/50 group-hover:bg-[#c9a06c]" />
-      )}
-    </div>
-  </button>
-);
-
-/* ─────────────── Session-Persistent Interactive Google Maps Component ─────────────── */
+/* ─────────────────────────────────────────────────────────────
+ * Persistent Google Maps Embed Component (Instant Session Cache)
+ * Pre-renders all venue map iframes in the DOM so that switching
+ * between ceremonies is instant with zero reload across the entire session.
+ * ───────────────────────────────────────────────────────────── */
 const loadedMapsSessionSet = new Set<string>();
 
 interface EventMapPreviewProps {
@@ -95,24 +34,18 @@ const EventMapPreview: React.FC<EventMapPreviewProps> = ({ activeEventId, events
     setLoadedIds((prev) => new Set(prev).add(id));
   };
 
-  const isCurrentLoaded = loadedIds.has(activeEventId);
+  const currentEvent = events.find((e) => e.id === activeEventId);
+  const currentQuery = currentEvent?.mapQuery || `${currentEvent?.venue || ""}, ${currentEvent?.address || ""}`;
+  const isMapAvailable = Boolean(currentQuery.trim() && currentEvent?.venue);
+
+  if (!isMapAvailable) return null;
 
   return (
-    <div className="relative w-full aspect-[16/9] sm:aspect-[21/9] md:aspect-[16/8] max-h-[170px] sm:max-h-none rounded-xl overflow-hidden border border-[#c99f58]/80 shadow-[0_6px_18px_rgba(80,45,20,0.14)] bg-[#f8f1e4]">
-      {/* Subtle inner gold rim */}
-      <div className="absolute inset-0 rounded-xl border border-[#ffd700]/30 pointer-events-none z-20" />
+    <div className="relative w-full aspect-[16/8] sm:aspect-[21/9] md:aspect-[16/7] max-h-[160px] sm:max-h-[180px] rounded-xl overflow-hidden border-2 border-[#b88636] shadow-[0_4px_18px_rgba(80,45,20,0.15)] bg-[#faedd4]">
+      {/* Gold inner filigree border accent */}
+      <div className="absolute inset-0 rounded-xl border border-[#ffd700]/40 pointer-events-none z-20" />
 
-      {/* Loading indicator shown only once when the active map hasn't loaded yet */}
-      {!isCurrentLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-[#faf1e0] text-[#744c2c] text-xs font-cinzel font-semibold z-15">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#8e3622] animate-ping" />
-            <span>Loading Venue Map...</span>
-          </div>
-        </div>
-      )}
-
-      {/* Persistent iframes: load once, then reuse seamlessly for the entire session without reloading */}
+      {/* Persistent cached iframes for each event venue */}
       {events.map((e) => {
         const isCurrent = e.id === activeEventId;
         const q = e.mapQuery || `${e.venue}, ${e.address || ""}`;
@@ -121,11 +54,14 @@ const EventMapPreview: React.FC<EventMapPreviewProps> = ({ activeEventId, events
         return (
           <iframe
             key={e.id}
-            title={`Google Maps venue location for ${e.venue}`}
+            title={`Google Maps location for ${e.venue}`}
             src={embedUrl}
             width="100%"
             height="100%"
-            style={{ border: 0 }}
+            style={{
+              border: 0,
+              visibility: isCurrent ? "visible" : "hidden",
+            }}
             loading="eager"
             allowFullScreen={false}
             referrerPolicy="no-referrer-when-downgrade"
@@ -140,180 +76,15 @@ const EventMapPreview: React.FC<EventMapPreviewProps> = ({ activeEventId, events
   );
 };
 
-/* ─────────────── Event Detail Showcase ─────────────── */
-interface EventShowcaseProps {
-  event: WeddingEventData;
-  events: WeddingEventData[];
-}
-
-const EventShowcase: React.FC<EventShowcaseProps> = ({ event, events }) => {
-  const queryText = event.mapQuery || `${event.venue}, ${event.address || ""}`;
-  const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(queryText)}`;
-
-  return (
-    <div className="w-full max-w-5xl mx-auto px-4 sm:px-6">
-      {/* 
-        DESKTOP LAYOUT: Balanced 2-Column (Left: Visual Illustration; Right: Details + Interactive Map + Action)
-        MOBILE LAYOUT: Strictly Ordered (1. Title -> 2. Illustration -> 3. Date & Time -> 4. Venue -> 5. Map -> 6. Directions)
-      */}
-      <div className="flex flex-col lg:flex-row items-center lg:items-start justify-center gap-8 lg:gap-12 xl:gap-14">
-        
-        {/* ============================================================ */}
-        {/* MOBILE ONLY: EVENT TITLE & DESCRIPTION (First in mobile order) */}
-        {/* ============================================================ */}
-        <div className="lg:hidden w-full text-center mb-1">
-          <span className="inline-block px-3 py-0.5 rounded-full bg-[#fbf2e3] border border-[#d4ba9b]/60 font-cinzel text-[11px] font-bold tracking-[0.22em] text-[#742719] uppercase mb-1">
-            CELEBRATION DETAILS
-          </span>
-          <h3 className="font-cinzel text-2xl font-black tracking-wide text-[#42100b] uppercase">
-            {event.name}
-          </h3>
-          {event.subTitle && (
-            <p className="font-cormorant text-base italic text-[#744c2c] font-semibold mt-0.5">
-              {event.subTitle}
-            </p>
-          )}
-        </div>
-
-        {/* ============================================================ */}
-        {/* LEFT COLUMN (Desktop) / STEP 2 (Mobile): PROMINENT ILLUSTRATION */}
-        {/* ============================================================ */}
-        <motion.div
-          key={`illustration-${event.id}`}
-          initial={false}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.96 }}
-          transition={{ duration: 0.35, ease: "easeOut" }}
-          className="relative w-full max-w-[240px] sm:max-w-[280px] lg:w-[45%] lg:max-w-[400px] aspect-[1/1] sm:aspect-[4/5] shrink-0 flex items-center justify-center mx-auto my-0.5 sm:my-1"
-        >
-          {/* Soft ambient radial glow - unrestricted without harsh boundaries */}
-          <div
-            className="absolute inset-0 rounded-full opacity-35 blur-xl sm:blur-2xl pointer-events-none"
-            style={{
-              background: `radial-gradient(circle, ${event.accentColor || "#d4af37"} 0%, transparent 70%)`,
-            }}
-          />
-
-          {/* Visual Asset - boundary-free and enlarged */}
-          <div className="relative w-full h-full">
-            <Image
-              src={event.illustration}
-              alt={event.name}
-              fill
-              sizes="(max-width: 640px) 250px, (max-width: 1024px) 280px, 400px"
-              className="object-contain drop-shadow-[0_10px_24px_rgba(80,45,20,0.22)]"
-              unoptimized
-              priority
-            />
-          </div>
-        </motion.div>
-
-        {/* ============================================================ */}
-        {/* RIGHT COLUMN (Desktop) / STEPS 3-6 (Mobile): DETAILS & MAP */}
-        {/* ============================================================ */}
-        <motion.div
-          key={`details-${event.id}`}
-          initial={false}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -15 }}
-          transition={{ duration: 0.35, ease: "easeOut" }}
-          className="flex-1 w-full max-w-lg flex flex-col justify-start text-left pt-1"
-        >
-          {/* DESKTOP TITLE & DESCRIPTION */}
-          <div className="hidden lg:block mb-4">
-            <span className="inline-block px-3 py-0.5 rounded-full bg-[#fbf2e3] border border-[#d4ba9b]/60 font-cinzel text-[11px] font-bold tracking-[0.24em] text-[#742719] uppercase mb-1.5">
-              CEREMONY DETAILS
-            </span>
-            <h3 className="font-cinzel text-2xl lg:text-3xl font-extrabold tracking-wide text-[#42100b] uppercase leading-tight">
-              {event.name}
-            </h3>
-            {event.subTitle && (
-              <p className="font-cormorant text-base lg:text-lg italic text-[#744c2c] font-semibold mt-1">
-                {event.subTitle}
-              </p>
-            )}
-          </div>
-
-          {/* DATE & TIME (Step 3) */}
-          <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-6 mb-2.5 sm:mb-4 pb-2.5 sm:pb-3.5 border-b border-[#d9ba9b]/40">
-            {/* Date */}
-            <div className="flex items-start gap-2.5">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#fffdf8] text-[#742719] shrink-0 border border-[#d9ba9b]/70 flex items-center justify-center shadow-2xs mt-0.5">
-                <Calendar size={14} />
-              </div>
-              <div>
-                <span className="font-cinzel text-xs sm:text-sm font-bold text-[#42100b] block leading-snug">
-                  {event.date}
-                </span>
-                {event.dayOfWeek && (
-                  <span className="text-[11px] sm:text-xs text-[#705846] font-cormorant italic font-semibold block">
-                    {event.dayOfWeek}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Time */}
-            <div className="flex items-start gap-2.5">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#fffdf8] text-[#742719] shrink-0 border border-[#d9ba9b]/70 flex items-center justify-center shadow-2xs mt-0.5">
-                <Clock size={14} />
-              </div>
-              <div>
-                <span className="font-cinzel text-xs sm:text-sm font-bold text-[#42100b] block leading-snug">
-                  {event.startTime}
-                  {event.endTime ? ` – ${event.endTime}` : " Onwards"}
-                </span>
-                {event.muhurthamTime && (
-                  <span className="text-[11px] sm:text-xs text-[#8e3622] font-cinzel font-semibold block mt-0.5">
-                    {event.muhurthamTime}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* VENUE (Step 4) */}
-          <div className="flex items-start gap-2.5 mb-2.5 sm:mb-4">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#fffdf8] text-[#742719] shrink-0 border border-[#d9ba9b]/70 flex items-center justify-center shadow-2xs mt-0.5">
-              <MapPin size={14} />
-            </div>
-            <div>
-              <span className="font-cinzel text-xs sm:text-sm font-bold text-[#42100b] block leading-snug">
-                {event.venue}
-              </span>
-              {event.address && (
-                <span className="text-[11px] sm:text-xs text-[#744c2c] font-sans block mt-0.5 leading-snug">
-                  {event.address}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* INTERACTIVE GOOGLE MAPS PREVIEW (Step 5) */}
-          <div className="w-full mb-3 sm:mb-4">
-            <EventMapPreview activeEventId={event.id} events={events} />
-          </div>
-
-          {/* DIRECTIONS BUTTON (Step 6) */}
-          <div className="flex items-center justify-start">
-            <a
-              href={googleMapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group inline-flex items-center justify-center gap-2 py-2 px-5 sm:py-2.5 sm:px-7 rounded-full bg-gradient-to-r from-[#63140d] via-[#7e1d13] to-[#63140d] text-[#fffcf5] border border-[#d4af37]/80 shadow-md hover:shadow-lg text-xs sm:text-sm font-cinzel font-bold tracking-wider uppercase transition-all duration-300 hover:scale-[1.02] cursor-pointer"
-            >
-              <Navigation size={13} className="text-[#ffd700]" />
-              <span>Get Directions</span>
-              <span className="text-xs transition-transform duration-300 group-hover:translate-x-1">→</span>
-            </a>
-          </div>
-        </motion.div>
-      </div>
-    </div>
-  );
-};
-
-/* ─────────────── MAIN SECTION 2 COMPONENT ─────────────── */
+/* ─────────────────────────────────────────────────────────────
+ * MAIN SECTION: WeddingCelebrationsSection
+ * Redesigned with:
+ * - Ultra-realistic ceremony photographs (like user's Image 2 reference)
+ * - Fixed event heading pill banner with ZERO clipping/cutting
+ * - Warm antique-gold parchment & sculpted filigree frame
+ * - Cached persistent venue map
+ * - Clean mobile icon row
+ * ───────────────────────────────────────────────────────────── */
 export const WeddingCelebrationsSection: React.FC = () => {
   const { events } = weddingConfig;
   const [activeIndex, setActiveIndex] = useState(0);
@@ -322,129 +93,509 @@ export const WeddingCelebrationsSection: React.FC = () => {
   const isInView = useInView(sectionRef, { once: true, margin: "-10%" });
   const shouldReduceMotion = useReducedMotion();
 
-  // Continuous Auto-Cycle timer across events
+  // Gentle auto-cycle across events
   const startAutoCycle = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
       setActiveIndex((prev) => (prev + 1) % events.length);
-    }, 5000);
+    }, 7000);
   }, [events.length]);
 
   useEffect(() => {
-    startAutoCycle();
+    if (isInView && !shouldReduceMotion) {
+      startAutoCycle();
+    }
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [startAutoCycle]);
+  }, [isInView, shouldReduceMotion, startAutoCycle]);
 
-  // Support ?event= URL parameter
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    const eventParam = params.get("event")?.toLowerCase();
-    if (eventParam) {
-      const idx = events.findIndex(
-        (e) =>
-          e.id.toLowerCase() === eventParam ||
-          e.name.toLowerCase() === eventParam ||
-          e.navLabel.toLowerCase() === eventParam
-      );
-      if (idx !== -1) {
-        setActiveIndex(idx);
-      }
-    }
-  }, [events]);
-
-  const handleSelect = useCallback((index: number) => {
+  const handleSelect = (index: number) => {
     setActiveIndex(index);
-    startAutoCycle(); // Reset timer so active event is shown for a full duration before cycling
-  }, [startAutoCycle]);
+    startAutoCycle(); // Reset auto timer on manual interaction
+  };
 
-  if (events.length === 0) return null;
+  const activeEvent = events[activeIndex] || events[0];
 
-  const activeEvent = events[activeIndex];
+  // Active event navigation link
+  const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    activeEvent.mapQuery || `${activeEvent.venue}, ${activeEvent.address || ""}`
+  )}`;
+
+  // SVG Geometry for Desktop Curved Timeline Ribbon
+  const numEvents = events.length;
+  const timelineSvgWidth = 800;
+  const timelineSvgHeight = 90;
+
+  const nodePositions = useMemo(() => {
+    if (numEvents <= 1) return [timelineSvgWidth / 2];
+    const margin = 110;
+    const usableWidth = timelineSvgWidth - margin * 2;
+    const step = usableWidth / (numEvents - 1);
+    return events.map((_, i) => margin + i * step);
+  }, [numEvents, events]);
+
+  // Smooth undulating bezier curve path connecting nodes
+  const timelinePathD = useMemo(() => {
+    if (numEvents <= 1) return "";
+    const pts = nodePositions;
+    let p = `M ${pts[0] - 60} ${timelineSvgHeight / 2} `;
+    p += `C ${pts[0] - 30} ${timelineSvgHeight / 2 - 8}, ${pts[0] - 15} ${timelineSvgHeight / 2 + 4}, ${pts[0]} ${timelineSvgHeight / 2} `;
+
+    for (let i = 0; i < pts.length - 1; i++) {
+      const x1 = pts[i];
+      const x2 = pts[i + 1];
+      const midX = (x1 + x2) / 2;
+      const dx = x2 - x1;
+      p += `C ${x1 + dx * 0.25} ${timelineSvgHeight / 2 - 14}, ${midX - dx * 0.2} ${timelineSvgHeight / 2 - 16}, ${midX} ${timelineSvgHeight / 2 - 6} `;
+      p += `C ${midX + dx * 0.2} ${timelineSvgHeight / 2 + 4}, ${x2 - dx * 0.25} ${timelineSvgHeight / 2 + 12}, ${x2} ${timelineSvgHeight / 2} `;
+    }
+    p += `C ${pts[pts.length - 1] + 15} ${timelineSvgHeight / 2 - 4}, ${pts[pts.length - 1] + 30} ${timelineSvgHeight / 2 + 8}, ${pts[pts.length - 1] + 60} ${timelineSvgHeight / 2}`;
+    return p;
+  }, [numEvents, nodePositions]);
 
   return (
     <section
       ref={sectionRef}
       id="wedding-celebrations"
       aria-label="Wedding Celebrations"
-      className="relative w-full overflow-hidden bg-transparent pt-0 pb-10 sm:pt-1 sm:pb-14 md:pt-2 md:pb-16"
+      className="relative w-full overflow-hidden bg-transparent pt-8 pb-4 sm:pt-10 sm:pb-6 md:pt-12 md:pb-8 text-[#42100b] select-none"
     >
-      {/* 
-        SACRED ROTATING LOTUS MANDALA AT START OF WEDDING CELEBRATIONS
-        Top half sits gracefully above, bottom half rotates continuously behind heading & event markers
-      */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10 flex items-center justify-center">
-        <motion.div
-          animate={shouldReduceMotion ? {} : { rotate: 360 }}
-          transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
-          className="relative w-[380px] h-[380px] sm:w-[520px] sm:h-[520px] md:w-[640px] md:h-[640px] opacity-80 sm:opacity-85 drop-shadow-[0_4px_28px_rgba(212,175,55,0.25)]"
-        >
+      {/* ─────────────────────────────────────────────────────────────
+       * BACKGROUND DECORATIVE ARTWORK (Kolam & Sacred Lotus Embellishments)
+       * ───────────────────────────────────────────────────────────── */}
+      <div className="absolute inset-0 pointer-events-none select-none overflow-hidden z-0">
+        {/* Top-Left Sacred Lotus Mandala Kolam */}
+        <div className="absolute -top-10 -left-12 sm:-left-6 w-48 sm:w-64 h-48 sm:h-64 opacity-[0.18]">
           <Image
             src="/decoration/Lotus-Mandala.png"
-            alt="Sacred Lotus Mandala"
+            alt=""
             fill
-            sizes="(max-width: 640px) 380px, (max-width: 768px) 520px, 640px"
-            className="object-contain"
-            priority
+            className="object-contain filter sepia"
             unoptimized
           />
-        </motion.div>
+        </div>
+
+        {/* Top-Right Sacred Lotus Mandala Kolam */}
+        <div className="absolute -top-10 -right-12 sm:-right-6 w-48 sm:w-64 h-48 sm:h-64 opacity-[0.18]">
+          <Image
+            src="/decoration/Lotus-Mandala.png"
+            alt=""
+            fill
+            className="object-contain filter sepia"
+            unoptimized
+          />
+        </div>
+
+        {/* Subtle Blooming Lotus Accent on Left */}
+        <div className="absolute top-1/3 -left-4 w-20 sm:w-28 h-20 sm:h-28 opacity-[0.22]">
+          <Image
+            src="/events/lotus-corner.png"
+            alt=""
+            fill
+            className="object-contain"
+            unoptimized
+          />
+        </div>
+
+        {/* Subtle Blooming Lotus Accent on Right */}
+        <div className="absolute top-1/2 -right-4 w-20 sm:w-28 h-20 sm:h-28 opacity-[0.22] scale-x-[-1]">
+          <Image
+            src="/events/lotus-corner.png"
+            alt=""
+            fill
+            className="object-contain"
+            unoptimized
+          />
+        </div>
       </div>
 
-      {/* Content Container */}
-      <div className="relative z-20">
-        {/* Floating Section Heading with Radiant Self-Highlighted Text */}
+      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* ─────────────────────────────────────────────────────────────
+         * 1. SECTION HEADER (Attractive Architectural Royal Plaque)
+         * ───────────────────────────────────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
-          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 15 }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-4 sm:mb-8 md:mb-10 px-4 flex flex-col items-center"
+          className="text-center mb-6 sm:mb-8 md:mb-10 flex flex-col items-center"
         >
-          {/* Top Pill / Badge with warm translucent aura - text itself highlighted */}
-          <div className="inline-flex items-center justify-center gap-2 mb-1.5 sm:mb-2 px-5 py-1 rounded-full bg-gradient-to-r from-transparent via-[#fffdf5]/85 to-transparent border-y border-[#d4af37]/40 select-none">
-            <span className="text-[#b88636] text-[10px] sm:text-xs">✦</span>
-            <span className="font-cinzel text-[11px] sm:text-xs font-black tracking-[0.26em] text-[#3d0706] uppercase [text-shadow:_0_1px_10px_rgba(255,248,220,1),_0_0_18px_rgba(255,230,150,0.9)]">
-              AUSPICIOUS CEREMONIES
+          {/* Auspicious Pill Tag */}
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#fbf2e3] border border-[#d4af37]/70 shadow-2xs mb-2.5">
+            <span className="text-[#b88636] text-[10px]">✦</span>
+            <span className="font-cinzel text-[10px] sm:text-xs font-bold tracking-[0.22em] text-[#742719] uppercase">
+              Sacred Ceremonies
             </span>
-            <span className="text-[#b88636] text-[10px] sm:text-xs">✦</span>
+            <span className="text-[#b88636] text-[10px]">✦</span>
           </div>
 
-          <h2 className="font-cinzel text-2xl sm:text-4xl md:text-5xl font-black tracking-wide sm:tracking-[0.16em] text-[#3d0706] uppercase leading-tight px-2 [text-shadow:_0_2px_16px_rgba(255,245,215,1),_0_0_30px_rgba(255,230,160,0.85)] drop-shadow-[0_3px_10px_rgba(80,25,10,0.15)]">
-            Wedding Celebrations
-          </h2>
+          {/* Royal Architectural Cartouche Heading Plaque */}
+          <div className="relative inline-flex items-center justify-center px-6 sm:px-10 py-2 sm:py-2.5 rounded-2xl bg-gradient-to-r from-[#5a1012] via-[#7e181e] to-[#5a1012] border-2 border-[#d4af37] shadow-[0_8px_24px_rgba(90,20,10,0.25)]">
+            {/* Corner Filigree Brackets */}
+            <div className="absolute top-1 left-1.5 w-2.5 h-2.5 border-t border-l border-[#ffd700]/70 pointer-events-none" />
+            <div className="absolute top-1 right-1.5 w-2.5 h-2.5 border-t border-r border-[#ffd700]/70 pointer-events-none" />
+            <div className="absolute bottom-1 left-1.5 w-2.5 h-2.5 border-b border-l border-[#ffd700]/70 pointer-events-none" />
+            <div className="absolute bottom-1 right-1.5 w-2.5 h-2.5 border-b border-r border-[#ffd700]/70 pointer-events-none" />
 
-          {/* Subtitle with warm translucent aura - text itself brightly highlighted */}
-          <div className="mt-1.5 sm:mt-2 px-6 sm:px-8 py-1 rounded-full bg-gradient-to-r from-transparent via-[#fffdf5]/80 to-transparent inline-block">
-            <p className="font-cormorant text-base sm:text-xl md:text-2xl italic text-[#4a1209] font-bold tracking-wide [text-shadow:_0_1px_12px_rgba(255,248,220,1),_0_0_24px_rgba(255,235,170,0.9)]">
-              Join us for these sacred moments of love and tradition
-            </p>
+            {/* Left Gold Wing Flourish */}
+            <span className="hidden sm:inline-block w-8 sm:w-12 h-px bg-gradient-to-r from-transparent via-[#ffd700] to-transparent mr-3" />
+
+            {/* Main Title Heading */}
+            <h2 className="font-cinzel text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black tracking-[0.2em] sm:tracking-[0.24em] text-[#fffdf8] uppercase leading-tight [text-shadow:_0_1px_3px_rgba(0,0,0,0.6),_0_0_12px_rgba(255,215,0,0.35)]">
+              Wedding Celebrations
+            </h2>
+
+            {/* Right Gold Wing Flourish */}
+            <span className="hidden sm:inline-block w-8 sm:w-12 h-px bg-gradient-to-r from-transparent via-[#ffd700] to-transparent ml-3" />
           </div>
 
-          <div className="w-16 h-0.5 bg-gradient-to-r from-transparent via-[#b88636] to-transparent mt-2" />
+          {/* Subtitle in Distinct Italic Serif */}
+          <p className="font-cormorant italic text-base sm:text-lg md:text-xl text-[#6e3a1f] font-bold tracking-wide mt-3 max-w-xl">
+            &ldquo;Join us for these sacred moments of love and tradition&rdquo;
+          </p>
         </motion.div>
 
-        {/* Event Navigation Row */}
-        <div className="relative w-full max-w-2xl mx-auto mb-4 sm:mb-8 md:mb-10 px-2 sm:px-4">
-          {/* Horizontal Track Line Behind Nav Dots */}
-          <div className="absolute left-10 right-10 bottom-[4px] sm:bottom-[5px] h-px bg-[#d9c4ad]/70 -z-0 pointer-events-none" />
+        {/* ─────────────────────────────────────────────────────────────
+         * 2. CONNECTED ORNAMENTAL TIMELINE (Desktop & Mobile)
+         * Uses authentic ceremony artwork images for each event
+         * ───────────────────────────────────────────────────────────── */}
+        <div className="relative w-full max-w-3xl sm:max-w-4xl mx-auto mb-6 sm:mb-8 md:mb-10">
+          
+          {/* DESKTOP CURVED ORNAMENTAL RIBBON TIMELINE */}
+          <div className="hidden sm:block relative w-full pt-4 pb-6">
+            {/* SVG Undulating Gold Ribbon Line */}
+            <div className="absolute inset-x-0 top-[40px] h-[48px] pointer-events-none select-none z-0">
+              <svg viewBox={`0 0 ${timelineSvgWidth} ${timelineSvgHeight}`} className="w-full h-full overflow-visible">
+                <defs>
+                  <linearGradient id="goldRibbonGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#d4af37" stopOpacity="0.2" />
+                    <stop offset="15%" stopColor="#ffd700" stopOpacity="0.85" />
+                    <stop offset="50%" stopColor="#b88636" stopOpacity="1" />
+                    <stop offset="85%" stopColor="#ffd700" stopOpacity="0.85" />
+                    <stop offset="100%" stopColor="#d4af37" stopOpacity="0.2" />
+                  </linearGradient>
+                  <filter id="ribbonGlow" x="-10%" y="-30%" width="120%" height="160%">
+                    <feGaussianBlur stdDeviation="2" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                  </filter>
+                </defs>
+                <path
+                  d={timelinePathD}
+                  fill="none"
+                  stroke="url(#goldRibbonGrad)"
+                  strokeWidth="2.8"
+                  strokeLinecap="round"
+                  filter="url(#ribbonGlow)"
+                  className="opacity-90"
+                />
+              </svg>
+            </div>
 
-          {/* Event selectors */}
-          <div className="flex items-center justify-center gap-2.5 sm:gap-5 md:gap-7 overflow-x-auto scrollbar-hide py-1.5 sm:py-2 px-2 sm:px-3 relative z-10">
-            {events.map((event, index) => (
-              <EventMarker
-                key={event.id}
-                event={event}
-                isActive={index === activeIndex}
-                onClick={() => handleSelect(index)}
-              />
-            ))}
+            {/* Desktop Timeline Nodes along the Ribbon */}
+            <div className="relative w-full flex items-center justify-between px-14 z-10">
+              {events.map((event, index) => {
+                const isActive = index === activeIndex;
+                const artworkSrc = getEventArtwork(event);
+
+                return (
+                  <button
+                    key={event.id}
+                    type="button"
+                    onClick={() => handleSelect(index)}
+                    className="group relative flex flex-col items-center justify-center focus:outline-none cursor-pointer transition-transform duration-300"
+                    style={{ transform: isActive ? "scale(1.1)" : "scale(1.0)" }}
+                  >
+                    {/* Node Medallion Frame */}
+                    <div
+                      className={`relative w-16 h-16 md:w-18 md:h-18 rounded-full p-1 flex items-center justify-center transition-all duration-300 ${
+                        isActive
+                          ? "bg-gradient-to-br from-[#ffd700] via-[#c99f58] to-[#63140d] shadow-[0_8px_26px_rgba(133,24,32,0.5)] ring-4 ring-[#ffd700]"
+                          : "bg-gradient-to-b from-[#fbf4e6] via-[#d4af37] to-[#8c5720] shadow-[0_4px_14px_rgba(80,45,20,0.15)] hover:scale-105"
+                      }`}
+                    >
+                      {/* Inner Circular Artwork Window */}
+                      <div className="relative w-full h-full rounded-full overflow-hidden bg-[#241711] ring-1 ring-[#ffd700]/70 flex items-center justify-center">
+                        <Image
+                          src={artworkSrc}
+                          alt={event.name}
+                          fill
+                          className="object-cover transition-transform duration-500 group-hover:scale-110"
+                          sizes="72px"
+                          unoptimized
+                        />
+                        {/* Subtle warm amber overlay on inactive */}
+                        {!isActive && (
+                          <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Event Name & Date Label */}
+                    <div className="flex flex-col items-center text-center mt-2.5">
+                      <span
+                        className={`font-cinzel text-xs md:text-sm font-bold tracking-wider uppercase transition-colors ${
+                          isActive ? "text-[#741c14] font-black" : "text-[#5e4332] group-hover:text-[#741c14]"
+                        }`}
+                      >
+                        {event.navLabel}
+                      </span>
+                      <span className="font-cormorant text-xs md:text-[13px] text-[#805527] font-semibold mt-0.5">
+                        {event.dayOfWeek ? event.dayOfWeek.split(" ")[0] : event.date.split(",")[0]}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ─────────────────────────────────────────────────────────────
+           * MOBILE TIMELINE (Show JUST the Icons of Events in a Row)
+           * ───────────────────────────────────────────────────────────── */}
+          <div className="sm:hidden w-full py-2 px-2">
+            <div className="flex items-center justify-center gap-4 mx-auto">
+              {events.map((event, index) => {
+                const isActive = index === activeIndex;
+                const artworkSrc = getEventArtwork(event);
+
+                return (
+                  <button
+                    key={event.id}
+                    type="button"
+                    onClick={() => handleSelect(index)}
+                    aria-label={`Select ${event.name} celebration`}
+                    className={`relative flex items-center justify-center rounded-full p-0.5 transition-all duration-300 cursor-pointer ${
+                      isActive
+                        ? "w-14 h-14 bg-gradient-to-br from-[#ffd700] via-[#c99f58] to-[#63140d] shadow-[0_4px_18px_rgba(133,24,32,0.5)] ring-2 ring-[#ffd700] scale-110 z-10"
+                        : "w-12 h-12 bg-gradient-to-b from-[#fbf4e6] via-[#d4af37] to-[#8c5720] shadow-sm opacity-85 hover:opacity-100"
+                    }`}
+                  >
+                    <div className="relative w-full h-full rounded-full overflow-hidden bg-[#241711] ring-1 ring-[#ffd700]/70 flex items-center justify-center">
+                      <Image
+                        src={artworkSrc}
+                        alt={event.name}
+                        fill
+                        className="object-cover"
+                        sizes="56px"
+                        unoptimized
+                      />
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
-        {/* Selected Event Showcase - persistent across event auto-cycles to keep maps loaded */}
-        <EventShowcase event={activeEvent} events={events} />
+        {/* ─────────────────────────────────────────────────────────────
+         * 3. SELECTED CEREMONY PRESENTATION CARD (Royal Antique Gold Theme)
+         * Unclipped Event Heading Plaque + Realistic Ceremony Photography
+         * ───────────────────────────────────────────────────────────── */}
+        <div className="relative w-full max-w-4xl mx-auto pt-6 sm:pt-8">
+          
+          {/* Main Ornate Carved Card Moulding Frame (Antique Gold Rim) */}
+          <div className="relative rounded-2xl sm:rounded-3xl p-1 sm:p-1.5 bg-gradient-to-b from-[#f7e4be] via-[#d4af37] to-[#8c5720] shadow-[0_20px_54px_rgba(90,45,15,0.22)]">
+            
+            {/* ── TOP CARTOUCHE BANNER (CEREMONY NAME) - Positioned with zero clipping ── */}
+            <div className="absolute -top-4 sm:-top-5 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center pointer-events-none">
+              <div className="relative flex items-center justify-center">
+                {/* Left Gold Wing Flourish */}
+                <span className="hidden sm:inline-block w-8 md:w-14 h-px bg-gradient-to-r from-transparent via-[#ffd700] to-transparent mr-2.5" />
+                
+                {/* Plaque Pill */}
+                <div className="px-6 sm:px-9 py-1 sm:py-1.5 rounded-full bg-gradient-to-r from-[#63140d] via-[#7e1d13] to-[#63140d] text-[#fffcf5] border-2 border-[#ffd700] shadow-[0_6px_20px_rgba(90,20,10,0.35)] flex items-center justify-center gap-2">
+                  <span className="text-[#ffd700] text-xs">✦</span>
+                  <span className="font-cinzel text-xs sm:text-sm font-black tracking-[0.2em] uppercase text-[#ffd700]">
+                    {activeEvent.name}
+                  </span>
+                  <span className="text-[#ffd700] text-xs">✦</span>
+                </div>
+
+                {/* Right Gold Wing Flourish */}
+                <span className="hidden sm:inline-block w-8 md:w-14 h-px bg-gradient-to-r from-transparent via-[#ffd700] to-transparent ml-2.5" />
+              </div>
+            </div>
+
+            {/* Inner Antique Warm Parchment Card Canvas (overflow-visible to prevent any cut off) */}
+            <div className="relative rounded-[14px] sm:rounded-[22px] bg-gradient-to-b from-[#fffbf2] via-[#fbf0dc] to-[#f5dfb8] pt-7 sm:pt-8 px-5 sm:px-8 pb-5 sm:pb-8 border border-[#ffd700]/60 overflow-visible">
+              
+              {/* Inner Fine Gold Hairline Contour */}
+              <div className="absolute inset-2 sm:inset-3 rounded-xl sm:rounded-2xl border border-[#d4af37]/40 pointer-events-none" />
+
+              {/* Corner Filigree Brackets */}
+              <div className="absolute top-2.5 left-2.5 w-6 h-6 border-t-2 border-l-2 border-[#b88636] rounded-tl-sm pointer-events-none" />
+              <div className="absolute top-2.5 right-2.5 w-6 h-6 border-t-2 border-r-2 border-[#b88636] rounded-tr-sm pointer-events-none" />
+              <div className="absolute bottom-2.5 left-2.5 w-6 h-6 border-b-2 border-l-2 border-[#b88636] rounded-bl-sm pointer-events-none" />
+              <div className="absolute bottom-2.5 right-2.5 w-6 h-6 border-b-2 border-r-2 border-[#b88636] rounded-br-sm pointer-events-none" />
+
+              {/* Ceremony Subtitle Inscription */}
+              <div className="text-center mb-5 sm:mb-6">
+                <AnimatePresence mode="wait">
+                  <motion.p
+                    key={`subtitle-${activeEvent.id}`}
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 4 }}
+                    transition={{ duration: 0.3 }}
+                    className="font-cormorant italic text-base sm:text-lg md:text-xl text-[#7c381c] font-bold"
+                  >
+                    {activeEvent.subTitle || "A sacred celebration with family and beloved guests"}
+                  </motion.p>
+                </AnimatePresence>
+              </div>
+
+              {/* Card Content Grid: Left Photo Setup Showcase, Right Details & Map */}
+              <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6 lg:gap-8">
+                
+                {/* ============================================================ */}
+                {/* LEFT: REALISTIC CEREMONY PHOTOGRAPHY SHOWCASE                */}
+                {/* ============================================================ */}
+                <div className="relative w-full max-w-[340px] sm:max-w-[400px] lg:w-[48%] lg:max-w-[430px] shrink-0 mx-auto">
+                  {/* Sculpted Golden Frame with Corner Finials */}
+                  <div className="relative w-full aspect-[4/3] sm:aspect-[14/11] rounded-2xl p-1 sm:p-1.5 bg-gradient-to-b from-[#ffd700] via-[#c99f58] to-[#8c5720] shadow-[0_12px_32px_rgba(80,45,20,0.25)]">
+                    <div className="relative w-full h-full rounded-[12px] sm:rounded-[14px] overflow-hidden bg-[#241711] ring-1 ring-[#ffd700]/70">
+                      <AnimatePresence mode="wait">
+                        <motion.div
+                          key={`photo-${activeEvent.id}`}
+                          initial={{ opacity: 0, scale: 0.96 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.96 }}
+                          transition={{ duration: 0.4, ease: "easeOut" }}
+                          className="relative w-full h-full"
+                        >
+                          <Image
+                            src={activeEvent.illustration}
+                            alt={`${activeEvent.name} ceremony setup`}
+                            fill
+                            sizes="(max-width: 640px) 340px, (max-width: 1024px) 400px, 430px"
+                            className="object-cover transition-transform duration-700 ease-out hover:scale-105"
+                            priority
+                            unoptimized
+                          />
+                          {/* Warm golden vignette */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent pointer-events-none" />
+                        </motion.div>
+                      </AnimatePresence>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ============================================================ */}
+                {/* RIGHT: CEREMONY DETAILS, VENUE & MAP PREVIEW                 */}
+                {/* ============================================================ */}
+                <div className="flex-1 w-full flex flex-col justify-start text-left">
+                  
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={`info-${activeEvent.id}`}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.3 }}
+                      className="flex flex-col gap-3 mb-3.5"
+                    >
+                      {/* Date & Time Row (Warm Parchment Panels with Gold Hairlines) */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
+                        {/* Date Block */}
+                        <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-[#fffcf5]/95 to-[#faf0de]/95 border border-[#c99f58]/70 shadow-2xs">
+                          <div className="w-8 h-8 rounded-lg bg-[#8e2424] text-[#ffd700] shrink-0 border border-[#ffd700]/50 flex items-center justify-center shadow-2xs">
+                            <Calendar size={16} />
+                          </div>
+                          <div className="leading-tight">
+                            <span className="font-cinzel text-xs sm:text-[13px] font-bold text-[#42100b] block">
+                              {activeEvent.date}
+                            </span>
+                            {activeEvent.dayOfWeek && (
+                              <span className="text-[11px] sm:text-xs text-[#744c2c] font-cormorant font-semibold block mt-0.5">
+                                {activeEvent.dayOfWeek}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Time Block */}
+                        <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-[#fffcf5]/95 to-[#faf0de]/95 border border-[#c99f58]/70 shadow-2xs">
+                          <div className="w-8 h-8 rounded-lg bg-[#8e2424] text-[#ffd700] shrink-0 border border-[#ffd700]/50 flex items-center justify-center shadow-2xs">
+                            <Clock size={16} />
+                          </div>
+                          <div className="leading-tight">
+                            <span className="font-cinzel text-xs sm:text-[13px] font-bold text-[#42100b] block">
+                              {activeEvent.startTime}
+                              {activeEvent.endTime && ` - ${activeEvent.endTime}`}
+                            </span>
+                            {activeEvent.muhurthamTime && (
+                              <span className="text-[11px] sm:text-xs text-[#8e3622] font-cinzel font-semibold block mt-0.5">
+                                ✦ {activeEvent.muhurthamTime}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Venue & Full Address Row (Warm Parchment Panel) */}
+                      <div className="flex items-start gap-3 p-3 sm:p-3.5 rounded-xl bg-gradient-to-r from-[#fffcf5]/95 to-[#faf0de]/95 border border-[#c99f58]/70 shadow-2xs">
+                        <div className="w-8 h-8 rounded-lg bg-[#8e2424] text-[#ffd700] shrink-0 border border-[#ffd700]/50 flex items-center justify-center shadow-2xs mt-0.5">
+                          <MapPin size={16} />
+                        </div>
+                        <div className="flex-1">
+                          <span className="font-cinzel text-xs sm:text-[13px] font-bold text-[#42100b] block leading-tight">
+                            {activeEvent.venue}
+                          </span>
+                          {activeEvent.address && (
+                            <span className="text-[11px] sm:text-xs text-[#744c2c] font-sans block mt-1 leading-snug">
+                              {activeEvent.address}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  </AnimatePresence>
+
+                  {/* Google Maps Preview (Instant Session Cached) */}
+                  <div className="w-full mb-3">
+                    <EventMapPreview activeEventId={activeEvent.id} events={events} />
+                  </div>
+
+                  {/* Get Directions Action Button */}
+                  <div className="flex items-center justify-start">
+                    <a
+                      href={googleMapsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group inline-flex items-center justify-center gap-2 py-2 px-6 sm:px-8 rounded-full bg-gradient-to-r from-[#63140d] via-[#7e1d13] to-[#63140d] text-[#fffcf5] border-2 border-[#ffd700] shadow-md hover:shadow-lg text-xs sm:text-[13px] font-cinzel font-bold tracking-wider uppercase transition-all duration-300 hover:scale-[1.02] cursor-pointer"
+                    >
+                      <Navigation size={13} className="text-[#ffd700]" />
+                      <span>Get Directions</span>
+                      <span className="text-xs transition-transform duration-300 group-hover:translate-x-1.5">→</span>
+                    </a>
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* ─────────────────────────────────────────────────────────────
+         * 4. BOTTOM AUSPICIOUS LOTUS TRANSITION DIVIDER
+         * ───────────────────────────────────────────────────────────── */}
+        <div className="flex items-center justify-center mt-6 sm:mt-8 select-none pointer-events-none">
+          <div className="relative w-20 sm:w-24 h-8 sm:h-9 flex items-center justify-center">
+            <Image
+              src="/decoration/Lotus-Mandala.png"
+              alt="Auspicious Lotus Motif"
+              fill
+              className="object-contain drop-shadow-[0_4px_12px_rgba(180,120,30,0.35)]"
+              unoptimized
+            />
+          </div>
+        </div>
+
       </div>
     </section>
   );

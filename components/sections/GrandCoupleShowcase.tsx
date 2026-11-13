@@ -71,10 +71,10 @@ export const GrandCoupleShowcase: React.FC = () => {
         />
       </div>
 
-      {/* Half-Visible Rotating Golden Mandala anchored at bottom center behind couple */}
+      {/* Half-Visible Rotating Golden Mandala anchored at bottom center in foreground */}
       <div
         aria-hidden="true"
-        className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-[360px] sm:w-[480px] md:w-[600px] aspect-square pointer-events-none z-[8] select-none"
+        className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-[360px] sm:w-[480px] md:w-[600px] aspect-square pointer-events-none z-30 select-none"
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
@@ -99,7 +99,7 @@ export const GrandCoupleShowcase: React.FC = () => {
           className="relative w-full h-full"
         >
           <Image
-            src="/decoration/couple-bottom-mandala.png"
+            src="/decoration/Lotus-Mandala.png"
             alt="Sacred Rotating Mandala"
             fill
             sizes="(max-width: 640px) 360px, (max-width: 1024px) 480px, 600px"

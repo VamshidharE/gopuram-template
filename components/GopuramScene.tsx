@@ -97,11 +97,23 @@ export const GopuramScene: React.FC = () => {
   const actualTravel = shouldReduceMotion ? travelDistance * 0.2 : travelDistance;
   const skyTravel = actualTravel * animation.skyParallaxIntensity;
 
-  // Layer 1: Sky Parallax (moves upward synchronously, stopping when scene completes)
+  // Layer 1: Sky Parallax
+  // Mobile: remains completely untouched (starts at 0, moves by -skyTravel)
+  // Desktop: starts precisely at 65% of the artwork height and travels smoothly to reach
+  // 100% (the bottom edge of the background artwork) as the Gopuram completes its landing.
+  const desktopScaledHeight = (viewport.width * 1831) / 724;
+  const desktopSkyTravel = Math.max(0, 0.35 * desktopScaledHeight - viewport.height);
+  const desktopContainerHeight = viewport.height + desktopSkyTravel;
+
+  const skyStartY = 0;
+  const skyEndY = isMobile
+    ? -skyTravel
+    : (shouldReduceMotion ? -desktopSkyTravel * 0.2 : -desktopSkyTravel);
+
   const skyY = useTransform(
     progressMotionValue,
     [0, animation.coupleRevealComplete, 1],
-    [0, -skyTravel, -skyTravel]
+    [skyStartY, skyEndY, skyEndY]
   );
 
   // Layer 2: Gopuram Travel (dynamic function ensures live viewport heights are always accurately applied)
@@ -170,15 +182,21 @@ export const GopuramScene: React.FC = () => {
         {/* LAYER 1: SKY BACKGROUND (INDEPENDENT PARALLAX LAYER)     */}
         {/* ========================================================= */}
         <motion.div
-          style={{ y: skyY }}
-          className="absolute inset-x-0 -top-[12vh] h-[135vh] w-full z-10"
+          style={{
+            y: skyY,
+            height: isMobile ? "135vh" : `${desktopContainerHeight}px`,
+            top: isMobile ? "-12vh" : 0,
+          }}
+          className="absolute inset-x-0 w-full z-10"
         >
           <Image
             src={assets.skyBackground}
             alt="Majestic South Indian sunset sky"
             fill
             sizes="100vw"
-            className="object-cover object-top filter brightness-[0.97] contrast-[1.04]"
+            className={`filter brightness-[0.97] contrast-[1.04] ${
+              isMobile ? "object-cover object-top" : "object-cover object-bottom"
+            }`}
             unoptimized
             priority
           />
@@ -258,22 +276,6 @@ export const GopuramScene: React.FC = () => {
 
         {/* Scroll down prompt */}
         <ScrollIndicator opacity={scrollIndicatorOpacity} />
-      </div>
-
-      {/* Cloud layer with organic undulating contour attached to the bottom of the section */}
-      <div
-        aria-hidden="true"
-        className="absolute bottom-0 inset-x-0 w-full z-30 pointer-events-none select-none h-[130px] sm:h-[180px] md:h-[240px]"
-      >
-        <Image
-          src="/decoration/undulating-clouds-horizon.png"
-          alt="Section Bottom Undulating Cloud Horizon"
-          fill
-          sizes="100vw"
-          className="object-fill"
-          unoptimized
-          priority
-        />
       </div>
     </div>
   );

@@ -37,6 +37,15 @@
   }
 }
 
+/* ── Gold map border pulse ── */
+@keyframes gold-border-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); border-color: rgba(201, 147, 59, 0.6); }
+  50%       { box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.25); border-color: rgba(212, 175, 55, 0.9); }
+}
+.gold-border-pulse {
+  animation: gold-border-pulse 2.8s ease-in-out infinite;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
